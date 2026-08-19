@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BabyFox Лесная лига — демо баланса</title>
+<style>
+:root{
+  --bg:#12100e; --panel:#1c1916; --panel2:#241f1a; --line:#3a3129;
+  --ink:#f0e9e0; --muted:#a2968a; --acc:#e8892b; --acc2:#7ab648;
+  --c:#8fa5b8; --r:#a988d6; --l:#e8b23a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#1c1916,#1c1916f0);border-bottom:1px solid var(--line);padding:10px 16px}
+h1{font-size:16px;margin:0 0 8px;letter-spacing:.02em}
+h1 span{color:var(--acc)}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px}
+.hudrow{display:flex;flex-wrap:wrap;gap:6px}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--ink)}
+.pill.coin b{color:var(--acc)} .pill.star b{color:var(--l)}
+.wrap{display:grid;grid-template-columns:1fr 1fr 340px;gap:14px;padding:14px;align-items:start}
+@media(max-width:1200px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+button{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc);color:#fff}
+button:disabled{opacity:.35;cursor:default}
+button.primary{background:var(--acc);border-color:var(--acc);color:#1a1206;font-weight:600}
+.topbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.muted{color:var(--muted);font-size:12px}
+.tag{font-weight:400;color:var(--muted);font-size:11px;text-transform:none;letter-spacing:0}
+.task{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.task.ready{border-color:var(--acc2)}
+.task.done{opacity:.45}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button.mode{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:180px;text-align:left;padding:8px 12px}
+button.mode b{font-size:14px}
+button.mode span{font-size:12px;color:var(--muted)}
+.deck{margin-bottom:10px}
+.dh{margin-bottom:4px}
+.deck.full .dh b{color:var(--acc2)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px}
+.chip{position:relative;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:6px;padding:5px 7px;font-size:11px}
+.chip.R{border-left-color:var(--r)} .chip.L{border-left-color:var(--l)}
+.chip.ghost{opacity:.25}
+.chip b{display:block;font-size:11px;font-weight:600}
+.chip .st{color:var(--muted);font-size:10px}
+.chip .cnt{position:absolute;top:4px;right:24px;color:var(--acc);font-style:normal;font-size:11px}
+.lock{position:absolute;top:2px;right:2px;padding:1px 4px;font-size:11px;background:none;border:none}
+.lock.on{color:var(--acc)}
+.mhead{font-size:15px;margin-bottom:8px}
+.turn{background:var(--panel2);border:1px solid var(--acc);border-radius:7px;padding:7px 10px;margin-bottom:8px}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:8px}
+.hcard{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:8px;padding:8px}
+.hcard.R{border-left-color:var(--r)} .hcard.L{border-left-color:var(--l)}
+.hcard .stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
+.stat{font-size:11px;padding:4px 6px;text-align:left}
+.stat.hl{border-color:var(--acc);color:var(--acc)}
+.stat.flat{border:1px dashed var(--line);color:var(--muted);border-radius:7px;padding:4px 6px;font-size:11px}
+.answer{width:100%;margin-top:6px;border-color:var(--acc);color:var(--acc)}
+.bonusbar{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px}
+.bchip{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--c)}
+.bchip.R{color:var(--r)} .bchip.L{color:var(--l)}
+.bchip.sel{border-color:var(--acc);background:#3a2a14;color:#fff}
+.bchip i{font-style:normal;color:var(--muted)}
+.bonuslist{display:flex;flex-wrap:wrap;gap:5px}
+.mlog{margin-top:8px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.mres{padding:8px 10px;border-radius:7px;background:var(--panel2);margin-bottom:8px}
+.mres.good{border:1px solid var(--acc2)} .mres.bad{border:1px solid #b4553a}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td{padding:3px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.le{font-size:12px;padding:3px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.le span{color:#6d6058;margin-right:6px}
+.le.good{color:var(--acc2)} .le.warn{color:#d99}
+</style>
+</head>
+<body>
+<header>
+  <h1>BabyFox <span>Лесная лига</span> — демо баланса</h1>
+  <div id="hud"></div>
+  <div class="topbtns">
+    <button class="primary" id="btnNext" onclick="nextDay()">Начать сезон</button>
+    <button onclick="autoDays(1)">Авто-день</button>
+    <button onclick="autoDays(7)">Авто-неделя</button>
+    <button onclick="save()">Сохранить</button>
+    <button onclick="load()">Загрузить</button>
+    <button onclick="exportJSON()">Экспорт JSON</button>
+    <button onclick="reset()">Сброс</button>
+  </div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="panel" id="tasks"></div>
+    <div class="panel" id="pvp" style="margin-top:14px"></div>
+    <div class="panel" id="match" style="margin-top:14px;display:none"></div>
+  </div>
+  <div class="panel" id="collection"></div>
+  <div>
+    <div class="panel" id="shop"></div>
+    <div class="panel" id="stats" style="margin-top:14px"></div>
+    <div class="panel" id="log" style="margin-top:14px"></div>
+    <div class="panel" id="rules" style="margin-top:14px"></div>
+  </div>
+</div>
+<script>
+/* ================= КОНФИГ БАЛАНСА ================= */
+const CFG = {
+  seasonDays: 60,
+  animals: ['Ёж','Белка','Заяц','Ласка','Барсук','Бобр','Рысь','Сова','Олень','Волк','Медведь','Лис'],
+  legPerDeck: [2,1,2,1,2,2,1,2,2,2,2,1],
+  rarePerDeck: 3,
+  cardsPerDeck: 10,
+  statNames: ['Сила','Ловкость','Интеллект','Смелость'],
+  sigStat: [3,1,1,1,0,2,1,2,0,3,0,2],
+  shape: { C:[0.40,0.28,0.18,0.14], R:[0.36,0.27,0.20,0.17], L:[0.30,0.26,0.23,0.21] },
+  sums:  { C:400, R:650, L:950, L1:1100 },
+  waveCaps: [24,40,54,67,79,90,100,108,115,120],
+  waveDays: [1,2,4,7,11,16,22,29,37,46],
+  wavePackOn: [2,4,6,8,10],
+  novelty: [[0.30,0.85],[0.60,0.65],[0.85,0.45],[1.01,0.30]],
+  ladderBase: 0.45,
+  dupRarity: { C:0.70, R:0.20, L:0.10 },
+  starValue: { C:1, R:2, L:3 },
+  loginCoins: {1:5,2:5,4:10,6:15},
+  loginBonus: {3:1,5:1,7:3},
+  loginPackDay: 7,
+  dailyTaskCoins: [10,11,12,13,14,15],
+  dailyTaskPackChance: [0.08,0.09,0.11,0.12,0.14,0.16],
+  dailyPackNames: ['Знакомство','Первые шаги','Освоение','Тактика','Мастерство','Финал'],
+  dailyPackSize: 10,
+  weekly: [
+    {t:'Открыть 15 новых карт коллекции', lvl:'Простое', coins:50, bonus:2, pack:true,  need:{newCards:15}},
+    {t:'Сыграть 10 матчей за неделю', lvl:'Простое', coins:50, bonus:2, pack:false, need:{matches:10}},
+    {t:'Применить 10 бонус-карт', lvl:'Простое', coins:50, bonus:2, pack:true,  need:{bonusUsed:10}},
+    {t:'Выиграть 12 матчей', lvl:'Средней сложности', coins:60, bonus:2, pack:false, need:{wins:12}},
+    {t:'Собрать 48 карт коллекции', lvl:'Средней сложности', coins:60, bonus:2, pack:true,  need:{total:48}},
+    {t:'Выиграть 10 матчей в Классике или Профи', lvl:'Средней сложности', coins:60, bonus:2, pack:false, need:{bigWins:10}},
+    {t:'Закрыть 6 колод животных', lvl:'Сложное', coins:75, bonus:3, pack:true,  need:{decks:6}},
+    {t:'Собрать 96 карт коллекции', lvl:'Сложное', coins:75, bonus:3, pack:false, need:{total:96}},
+  ],
+  social: { onceCoins:35, onceCount:6, dailyCoins:3 },
+  referral: [
+    {friends:1, coins:50, pack:false, bonus:2},
+    {friends:3, coins:100, pack:true, bonus:3},
+    {friends:5, coins:100, pack:false, bonus:4},
+    {friends:10, coins:200, pack:true, bonus:10},
+  ],
+  referralRepeatBonus: 1, referralRepeatEvery: 10, referralRepeatMax: 5,
+  qr: { bonusPerCode:3, limit:120 },
+  modes: {
+    exp: {name:'Экспресс', access:5,  cards:3, need:2, win:6,  draw:4,  lose:2, ratW:15, ratD:6,  mm:5},
+    cls: {name:'Классика', access:15, cards:5, need:3, win:10, draw:6,  lose:3, ratW:25, ratD:10, mm:7},
+    pro: {name:'Профи',    access:30, cards:7, need:4, win:15, draw:10, lose:5, ratW:35, ratD:14, mm:10},
+  },
+  rewardCurve: [[5,1.0],[8,0.5],[999,0.25]],
+  slotPrices: [0,25,60,150,400],
+  bkSize: 50,
+  packs: [
+    {id:'std',  name:'Стандартный', price:35, cards:5, guarantee:null},
+    {id:'epic', name:'Эпик-пак',    price:60, cards:5, guarantee:'rare'},
+    {id:'loot', name:'Лут-пак',     price:90, cards:5, guarantee:'new'},
+  ],
+  achievements: { deck:125, bk50:200, full:500 },
+  shop: [
+    {id:'backpack', name:'Рюкзак со сладостями BabyFox', price:7000, type:'Физический', stock:200},
+    {id:'box',      name:'Коробка шоколадок BabyFox',    price:4000, type:'Физический', stock:1200},
+    {id:'robux',    name:'500 Robux',                    price:2000, type:'Цифровой',   stock:3000},
+    {id:'cert',     name:'Сертификат / подписка 300 ₽',  price:1200, type:'Цифровой',   stock:7000},
+    {id:'promo',    name:'Промокод на продукцию BabyFox',price:600,  type:'Цифровой',   stock:Infinity},
+    {id:'bonuspack',name:'Бонус-пак (5 бонус-карт)',     price:400,  type:'Игровой',    stock:Infinity},
+  ],
+  botBonusChance: 0.10,
+};
+
+/* ================= ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ================= */
+const DAILY_TASKS = [
+ // ── Пачка 1. Знакомство (1–10) — только осмотр интерфейса
+ {t:'Открыть коллекцию и осмотреть все 12 колод', k:'free'},
+ {t:'Сформировать боевую колоду', k:'free'},
+ {t:'Посмотреть характеристики любой карты', k:'free'},
+ {t:'Изучить список бонус-карт', k:'free'},
+ {t:'Заглянуть в витрину', k:'free'},
+ {t:'Проверить своё место в рейтинге', k:'free'},
+ {t:'Проверить, сколько звёзд на балансе', k:'free'},
+ {t:'Посмотреть, какая колода сейчас в приоритете', k:'free'},
+ {t:'Проверить прогресс текущей колоды', k:'free'},
+ {t:'Обновить боевую колоду', k:'free'},
+ // ── Пачка 2. Первые шаги (11–20) — одно простое действие
+ {t:'Получить любую карту за день', k:'cardsGot', n:1},
+ {t:'Открыть 1 новую карту', k:'newCards', n:1},
+ {t:'Сыграть 1 матч', k:'matches', n:1},
+ {t:'Выиграть 1 раунд', k:'rounds', n:1},
+ {t:'Применить 1 бонус-карту', k:'bonusUsed', n:1},
+ {t:'Поставить блокировку на карту', k:'blocked', n:1},
+ {t:'Открыть 2 новые карты', k:'newCards', n:2},
+ {t:'Сыграть 2 матча', k:'matches', n:2},
+ {t:'Выиграть 1 матч', k:'wins', n:1},
+ {t:'Выиграть 2 раунда', k:'rounds', n:2},
+ // ── Пачка 3. Освоение (21–30) — новые механики
+ {t:'Сыграть матч в Классике', k:'clsMatches', n:1},
+ {t:'Открыть 3 новые карты', k:'newCards', n:3},
+ {t:'Сыграть 3 матча', k:'matches', n:3},
+ {t:'Выиграть 2 матча', k:'wins', n:2},
+ {t:'Применить 2 бонус-карты', k:'bonusUsed', n:2},
+ {t:'Выиграть 3 раунда', k:'rounds', n:3},
+ {t:'Купить пак за звёзды', k:'packsBought', n:1},
+ {t:'Пригласить друга', k:'friends', n:1},
+ {t:'Отсканировать QR-код', k:'qrUsed', n:1},
+ {t:'Купить слот блокировки', k:'slotsBought', n:1},
+ // ── Пачка 4. Тактика (31–40) — условия по характеристикам и типам
+ {t:'Выиграть раунд по Силе', k:'statWin0', n:1},
+ {t:'Выиграть раунд по Ловкости', k:'statWin1', n:1},
+ {t:'Выиграть раунд по Интеллекту', k:'statWin2', n:1},
+ {t:'Выиграть раунд по Смелости', k:'statWin3', n:1},
+ {t:'Применить дебаф-бонус-карту', k:'debuffUsed', n:1},
+ {t:'Выиграть 2 матча подряд', k:'streak', n:2},
+ {t:'Довести любую колоду до 8 карт из 10', k:'deck8', n:1},
+ {t:'Сыграть 4 матча', k:'matches', n:4},
+ {t:'Открыть 4 новые карты', k:'newCards', n:4},
+ {t:'Применить 3 бонус-карты', k:'bonusUsed', n:3},
+ // ── Пачка 5. Мастерство (41–50)
+ {t:'Закрыть 1 колоду животного', k:'decksTotal', n:1},
+ {t:'Выиграть матч в Профи', k:'proWins', n:1},
+ {t:'Выиграть 5 раундов', k:'rounds', n:5},
+ {t:'Выиграть 3 матча', k:'wins', n:3},
+ {t:'Собрать 40 карт коллекции', k:'total', n:40},
+ {t:'Применить 5 бонус-карт', k:'bonusUsed', n:5},
+ {t:'Выиграть матч, не потеряв ни одной карты', k:'cleanWin', n:1},
+ {t:'Сыграть 6 матчей', k:'matches', n:6},
+ {t:'Закрыть 2 колоды животных', k:'decksTotal', n:2},
+ {t:'Купить 3 пака за звёзды', k:'packsBought', n:3},
+ // ── Пачка 6. Финал (51–60)
+ {t:'Выиграть 3 матча подряд', k:'streak', n:3},
+ {t:'Собрать 60 карт коллекции', k:'total', n:60},
+ {t:'Выиграть 2 матча в Профи', k:'proWins', n:2},
+ {t:'Применить легендарную бонус-карту', k:'legBonusUsed', n:1},
+ {t:'Выиграть матч всухую', k:'sweep', n:1},
+ {t:'Закрыть 3 колоды животных', k:'decksTotal', n:3},
+ {t:'Выиграть 5 матчей', k:'wins', n:5},
+ {t:'Сыграть 8 матчей', k:'matches', n:8},
+ {t:'Собрать 90 карт коллекции', k:'total', n:90},
+ {t:'Закрыть 6 колод животных', k:'decksTotal', n:6},
+];
+/* ================= БОНУС-КАРТЫ (45) ================= */
+const BONUS = [];
+(function(){
+  const add=(names,type,val,rar,desc)=>names.forEach(n=>BONUS.push({name:n,type,val,rar,desc}));
+  add(['Тёплый ветер','Крепкий корень','Свежий след','Ясное утро','Второе дыхание','Лёгкая лапа'],'up',8,'C','+8 к сравниваемой характеристике');
+  add(['Порыв ветра','Твёрдая хватка','Острый нюх','Быстрый рывок','Зов чащи'],'up',15,'C','+15 к сравниваемой характеристике');
+  add(['Ярое сердце','Мощь бора','Волчий азарт','Медвежья хватка'],'up',25,'R','+25 к сравниваемой характеристике');
+  add(['Мокрый снег','Скользкий мох','Колючий репей','Туманная дымка','Сонная трава','Липкая паутина'],'down',8,'C','−8 характеристике соперника');
+  add(['Ледяной ветер','Топкая трясина','Густой бурелом','Хмурое небо','Осенняя стужа'],'down',15,'C','−15 характеристике соперника');
+  add(['Буреломная ночь','Ливень','Гнилая тропа','Метель'],'down',25,'R','−25 характеристике соперника');
+  add(['Роса','Первый луч','Тихий рассвет'],'up',5,'C','+5 ко всем характеристикам');
+  add(['Полдень','Летний зной'],'up',10,'C','+10 ко всем характеристикам');
+  add(['Полнолуние'],'up',18,'R','+18 ко всем характеристикам');
+  add(['Морось','Сырость'],'down',5,'C','−5 всем характеристикам соперника');
+  add(['Затяжной дождь'],'down',10,'C','−10 всем характеристикам соперника');
+  add(['Долгая зима'],'down',18,'R','−18 всем характеристикам соперника');
+  add(['Щит'],'shield',0,'R','Карта не переходит сопернику, даже если проиграла раунд');
+  add(['Подмена'],'swap',0,'R','Сравниваемая характеристика заменяется на сильнейшую твоей карты');
+  add(['Отмена'],'cancel',0,'R','Отменяет бонус-карту соперника в этом раунде');
+  add(['Право голоса'],'voice',0,'L','Перехватывает право назвать характеристику');
+  add(['Ярость'],'rage',0,'L','Умножает характеристику твоей карты на 1,5');
+})();
+
+/* ================= ГЕНЕРАЦИЯ КАРТ ================= */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const CARDS=[];
+(function(){
+  const rnd=mulberry(20260818);
+  const roleC=['Следопыт','Дозорный','Собиратель','Бегун','Ученик','Сторож'];
+  const roleR=['Вожак','Хранитель тропы','Мастер маскировки'];
+  const roleL=['Дух леса','Владыка чащи'];
+  CFG.animals.forEach((a,d)=>{
+    const L=CFG.legPerDeck[d], nC=CFG.cardsPerDeck-CFG.rarePerDeck-L;
+    const leads=[]; const sig=CFG.sigStat[d];
+    for(let i=0;i<2;i++) leads.push(sig);
+    [0,1,2,3].filter(x=>x!==sig).forEach(x=>{leads.push(x);leads.push(x);});
+    for(let i=leads.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[leads[i],leads[j]]=[leads[j],leads[i]];}
+    let li=0;
+    const mk=(rar,sum,lead)=>{
+      const sh=CFG.shape[rar]; const order=[0,1,2,3].filter(x=>x!==lead);
+      for(let i=order.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+      const full=[lead,...order]; const st=[0,0,0,0];
+      full.forEach((s,p)=>{ st[s]=Math.round(sum*sh[p]*(0.94+rnd()*0.12)); });
+      return st;
+    };
+    for(let k=0;k<nC;k++) CARDS.push({deck:d,animal:a,name:`${a}: ${roleC[k]}`,rar:'C',st:mk('C',CFG.sums.C,leads[li++%leads.length])});
+    for(let k=0;k<CFG.rarePerDeck;k++) CARDS.push({deck:d,animal:a,name:`${a}: ${roleR[k]}`,rar:'R',st:mk('R',CFG.sums.R,leads[li++%leads.length])});
+    for(let k=0;k<L;k++) CARDS.push({deck:d,animal:a,name:`${a}: ${roleL[k]}`,rar:'L',st:mk('L',L===1?CFG.sums.L1:CFG.sums.L,sig)});
+  });
+  CARDS.forEach((c,i)=>c.id=i);
+})();
+const deckCards=d=>CARDS.filter(c=>c.deck===d).map(c=>c.id);
+
+/* ================= СОСТОЯНИЕ ================= */
+function newState(){
+  return {
+    day:0, wave:0, coins:0, stars:0, rating:0,
+    copies:new Array(120).fill(0), opened:new Array(120).fill(false),
+    bonus:{},                       // индекс бонус-карты -> количество
+    slots:1, blocked:[],            // купленные слоты и заблокированные карты
+    dailyDone:0, dailyTaskIdx:null, dailyTaskDone:false,
+    weeklyDone:new Array(8).fill(false),
+    socialOnce:0, socialToday:false,
+    friends:0, refStage:0, refRepeat:0,
+    qrUsed:0, qrToday:0,
+    matchesToday:0, packsBought:0,
+    prizes:{}, log:[],
+    stat:{matches:0,wins:0,losses:0,draws:0,rounds:0,roundsLost:0,roundDraws:0,
+          cardsWon:0,cardsLost:0,dups:0,starsEarned:0,bonusUsed:0,newCards:0,
+          proWins:0,bigWins:0,clsMatches:0,streak:0,bestStreak:0,cleanWin:0,sweep:0,
+          debuffUsed:0,legBonusUsed:0,statWin:[0,0,0,0],cardsGotToday:0,newCardsToday:0},
+    achDecks:new Array(12).fill(false), achBk:false, achFull:false,
+    seasonOver:false,
+  };
+}
+let S=newState();
+
+/* ================= ХЕЛПЕРЫ ================= */
+const uniq=()=>S.opened.filter(Boolean).length;
+const cap=()=>CFG.waveCaps[S.wave];
+const deckClosed=d=>deckCards(d).every(i=>S.opened[i]);
+const closedDecks=()=>{let n=0;for(let d=0;d<12;d++) if(deckClosed(d)) n++; return n;};
+const bkList=()=>{ // боевая колода: до 50 лучших, без заблокированных
+  const own=CARDS.filter(c=>S.copies[c.id]>0 && !S.blocked.includes(c.id));
+  own.sort((a,b)=>b.st.reduce((x,y)=>x+y,0)-a.st.reduce((x,y)=>x+y,0));
+  return own.slice(0,CFG.bkSize);
+};
+function log(msg,cls){ S.log.unshift({d:S.day,msg,cls}); if(S.log.length>250) S.log.pop(); }
+
+/* ================= ВЫДАЧА КАРТЫ ================= */
+function noveltyChance(){ const p=uniq()/120; for(const [thr,v] of CFG.novelty) if(p<thr) return v; return 0.30; }
+function pickNewCard(){ // возвращает индекс карты или null
+  const openDecks=[];
+  for(let d=0;d<12;d++){ const miss=deckCards(d).filter(i=>!S.opened[i]); if(miss.length) openDecks.push({d,miss}); }
+  if(!openDecks.length) return null;
+  const w=openDecks.map((o,k)=>Math.pow(CFG.ladderBase,k));
+  const sum=w.reduce((a,b)=>a+b,0); let r=Math.random()*sum;
+  let pick=openDecks[0];
+  for(let k=0;k<openDecks.length;k++){ r-=w[k]; if(r<=0){ pick=openDecks[k]; break; } }
+  return pick.miss[Math.floor(Math.random()*pick.miss.length)];
+}
+function pickDup(rarForce){
+  const rar = rarForce || (()=>{const r=Math.random(); return r<0.70?'C':(r<0.90?'R':'L');})();
+  let own=CARDS.filter(c=>S.opened[c.id] && c.rar===rar);
+  if(!own.length) own=CARDS.filter(c=>S.opened[c.id]);
+  if(!own.length) return null;
+  return own[Math.floor(Math.random()*own.length)].id;
+}
+// forceNew — стартовые паки; guarantee — 'new' | 'rare' | null
+function grantCard(forceNew=false, guarantee=null){
+  const atCap = uniq()>=cap();
+  let id=null, isNew=false;
+  // ВАЖНО: индекс карты может быть 0, поэтому проверяем строго на null
+  if((forceNew||guarantee==='new') && !atCap){ const p=pickNewCard(); if(p!==null){ id=p; isNew=true; } }
+  if(id===null && !atCap && Math.random()<noveltyChance()){ const p=pickNewCard(); if(p!==null){ id=p; isNew=true; } }
+  if(id===null){
+    id=pickDup(guarantee==='rare'?'R':null);
+    if(id===null){ // совсем нечего выдать — компенсация
+      addBonus(2); log('Гарантия невыполнима — компенсация 2 бонус-картами','warn'); return null;
+    }
+  }
+  S.stat.cardsGotToday++;
+  if(isNew){ S.opened[id]=true; S.copies[id]=1; S.stat.newCards++; S.stat.newCardsToday++; }
+  else if(S.copies[id]===0){ S.copies[id]=1; }
+  else { S.copies[id]++; S.stat.dups++; const v=CFG.starValue[CARDS[id].rar]; S.stars+=v; S.stat.starsEarned+=v; }
+  return {id,isNew};
+}
+function openPack(n=5,opts={}){
+  const got=[];
+  for(let i=0;i<n;i++){
+    const g=grantCard(opts.forceNew===true, i===0?(opts.guarantee||null):null);
+    if(g) got.push(g);
+  }
+  checkAchievements();
+  return got;
+}
+function addBonus(n=1){
+  for(let i=0;i<n;i++){
+    const r=Math.random(); const rar=r<0.70?'C':(r<0.95?'R':'L');
+    let pool=BONUS.map((b,i)=>({b,i})).filter(x=>x.b.rar===rar);
+    if(!pool.length) pool=BONUS.map((b,i)=>({b,i}));
+    const p=pool[Math.floor(Math.random()*pool.length)];
+    S.bonus[p.i]=(S.bonus[p.i]||0)+1;
+  }
+}
+function repairState(){ // страховка от рассинхрона: экземпляр без открытия невозможен
+  for(let i=0;i<120;i++) if(S.copies[i]>0 && !S.opened[i]) S.opened[i]=true;
+}
+function checkAchievements(){
+  repairState();
+  for(let d=0;d<12;d++) if(!S.achDecks[d] && deckClosed(d)){
+    S.achDecks[d]=true; S.coins+=CFG.achievements.deck;
+    log(`Колода «${CFG.animals[d]}» собрана: +${CFG.achievements.deck} монет`,'good');
+  }
+  if(!S.achBk && bkList().length>=50){ S.achBk=true; S.coins+=CFG.achievements.bk50; log(`Боевая колода из 50 карт: +${CFG.achievements.bk50} монет`,'good'); }
+  if(!S.achFull && uniq()===120){ S.achFull=true; S.coins+=CFG.achievements.full; log(`Полная коллекция 120/120: +${CFG.achievements.full} монет`,'good'); }
+}
+/* ================= ДЕНЬ ================= */
+function currentPack(){ return Math.min(Math.floor(S.dailyDone/CFG.dailyPackSize),CFG.dailyPackNames.length-1); }
+function rollDailyTask(){
+  const pk=currentPack(); const from=pk*CFG.dailyPackSize, to=from+CFG.dailyPackSize;
+  S.dailyTaskIdx = from + Math.floor(Math.random()*(to-from));
+  S.dailyTaskDone=false;
+}
+function weekOf(day){ return Math.floor((day-1)/7); }
+function nextDay(){
+  if(S.seasonOver) return;
+  if(S.day>=CFG.seasonDays){ S.seasonOver=true; log('Сезон завершён','warn'); render(); return; }
+  S.day++;
+  S.matchesToday=0; S.socialToday=false; S.qrToday=0;
+  S.stat.cardsGotToday=0; S.stat.newCardsToday=0;
+  // волны
+  while(S.wave<9 && S.day>=CFG.waveDays[S.wave+1]){
+    S.wave++;
+    log(`Открылась волна ${S.wave+1}: потолок коллекции ${cap()} карт`,'good');
+    if(CFG.wavePackOn.includes(S.wave+1)){ openPack(5); log('Пак за открытие волны: 5 карт','good'); }
+  }
+  // вход
+  const dow=((S.day-1)%7)+1;
+  const c=CFG.loginCoins[dow]||0; if(c){ S.coins+=c; }
+  const b=CFG.loginBonus[dow]||0; if(b){ addBonus(b); }
+  if(dow===CFG.loginPackDay){ openPack(5); log('Пак за ежедневный вход: 5 карт','good'); }
+  if(S.day===1){ openPack(5,{forceNew:true}); log('Стартовый пак: 5 гарантированно новых карт','good'); }
+  if(S.day===2){ openPack(5,{forceNew:true}); addBonus(3); log('Пак второго дня: 5 новых карт и 3 бонус-карты','good'); }
+  rollDailyTask();
+  checkAchievements();
+  render();
+}
+/* ================= ЗАДАНИЯ ================= */
+function taskProgress(t){
+  const st=S.stat;
+  const map={ free:1, matches:st.matches, rounds:st.rounds, newCards:st.newCards, wins:st.wins,
+    bonusUsed:st.bonusUsed, blocked:S.blocked.length, clsMatches:st.clsMatches, proWins:st.proWins,
+    streak:st.bestStreak, cardsGot:st.cardsGotToday, packsBought:S.packsBought, debuffUsed:st.debuffUsed,
+    cleanWin:st.cleanWin, sweep:st.sweep, legBonusUsed:st.legBonusUsed, total:uniq(),
+    decksTotal:closedDecks(), bigWins:st.bigWins,
+    deck8:(()=>{let n=0;for(let d=0;d<12;d++) if(deckCards(d).filter(i=>S.opened[i]).length>=8) n++; return n;})(),
+    statWin0:st.statWin[0], statWin1:st.statWin[1], statWin2:st.statWin[2], statWin3:st.statWin[3],
+    friends:S.friends, qrUsed:S.qrUsed, slotsBought:S.slots-1 };
+  return map[t.k]!==undefined?map[t.k]:0;
+}
+function canDoDaily(){
+  if(S.dailyTaskDone||S.dailyTaskIdx===null) return false;
+  const t=DAILY_TASKS[S.dailyTaskIdx];
+  return t.k==='free' || taskProgress(t)>=(t.n||1);
+}
+function doDaily(){
+  if(!canDoDaily()) return;
+  const pk=currentPack();
+  S.coins+=CFG.dailyTaskCoins[pk]; S.dailyDone++; S.dailyTaskDone=true;
+  log(`Задание выполнено: +${CFG.dailyTaskCoins[pk]} монет`,'good');
+  if(Math.random()<CFG.dailyTaskPackChance[pk]){ openPack(5); log('За задание выпал пак: 5 карт','good'); }
+  render();
+}
+function weeklyProgress(i){
+  const w=CFG.weekly[i], st=S.stat, need=w.need, key=Object.keys(need)[0];
+  const map={matches:st.matches,newCards:st.newCards,wins:st.wins,total:uniq(),
+    bonusUsed:st.bonusUsed,bigWins:st.bigWins,decks:closedDecks()};
+  return {have:map[key]||0, need:need[key]};
+}
+function doWeekly(i){
+  if(S.weeklyDone[i]) return;
+  if(weekOf(S.day)<i) return;
+  const p=weeklyProgress(i); if(p.have<p.need) return;
+  const w=CFG.weekly[i];
+  S.weeklyDone[i]=true; S.coins+=w.coins; addBonus(w.bonus);
+  if(w.pack){ openPack(5); }
+  log(`Еженедельное задание ${i+1}: +${w.coins} монет, ${w.bonus} бонус-карт${w.pack?', пак из 5 карт':''}`,'good');
+  render();
+}
+function doSocialOnce(){
+  if(S.socialOnce>=CFG.social.onceCount) return;
+  S.socialOnce++; S.coins+=CFG.social.onceCoins;
+  log(`Социальное действие: +${CFG.social.onceCoins} монет`,'good'); render();
+}
+function doSocialDaily(){
+  if(S.socialToday) return;
+  S.socialToday=true; S.coins+=CFG.social.dailyCoins; render();
+}
+function inviteFriend(){
+  S.friends++;
+  const st=CFG.referral[S.refStage];
+  if(st && S.friends>=st.friends){
+    S.refStage++; S.coins+=st.coins; addBonus(st.bonus);
+    if(st.pack) openPack(5);
+    log(`Реферальный этап «${st.friends} друзей»: +${st.coins} монет, ${st.bonus} бонус-карт${st.pack?', пак':''}`,'good');
+  } else if(S.friends>10){
+    const extra=Math.floor((S.friends-10)/CFG.referralRepeatEvery);
+    if(extra>S.refRepeat && S.refRepeat<CFG.referralRepeatMax){
+      S.refRepeat=extra; addBonus(CFG.referralRepeatBonus);
+      log(`Ещё 10 друзей: +1 бонус-карта`,'good');
+    }
+  }
+  render();
+}
+function scanQR(){
+  if(S.qrUsed>=CFG.qr.limit){ log('Лимит QR-кодов исчерпан (120 на аккаунт)','warn'); render(); return; }
+  S.qrUsed++; addBonus(CFG.qr.bonusPerCode);
+  log(`QR-код отсканирован: +${CFG.qr.bonusPerCode} бонус-карты`,'good'); render();
+}
+/* ================= МАГАЗИН ================= */
+function buyPack(id){
+  const p=CFG.packs.find(x=>x.id===id);
+  if(S.stars<p.price){ log('Недостаточно звёзд','warn'); render(); return; }
+  S.stars-=p.price; S.packsBought++;
+  const got=openPack(p.cards,{guarantee:p.guarantee});
+  const nw=got.filter(g=>g.isNew).length;
+  log(`${p.name} за ${p.price}★: ${nw} новых из ${got.length}`,'good'); render();
+}
+function buySlot(){
+  if(S.slots>=5) return;
+  const price=CFG.slotPrices[S.slots];
+  if(S.coins<price){ log('Недостаточно монет','warn'); render(); return; }
+  S.coins-=price; S.slots++;
+  log(`Куплен слот блокировки ${S.slots} за ${price} монет`,'good'); render();
+}
+function toggleBlock(id){
+  const i=S.blocked.indexOf(id);
+  if(i>=0){ S.blocked.splice(i,1); }
+  else{ if(S.blocked.length>=S.slots){ log('Все слоты блокировки заняты','warn'); render(); return; } S.blocked.push(id); }
+  render();
+}
+function buyPrize(id){
+  const p=CFG.shop.find(x=>x.id===id);
+  if(S.coins<p.price){ log('Недостаточно монет','warn'); render(); return; }
+  S.coins-=p.price; S.prizes[id]=(S.prizes[id]||0)+1;
+  if(id==='bonuspack') addBonus(5);
+  log(`Куплено: ${p.name} за ${p.price} монет`,'good'); render();
+}
+/* ================= PvP ================= */
+let M=null; // текущий матч
+// Бот-соперник: коллекция в коридоре матчмейкинга, боевая колода того же размера,
+// что и у игрока (реальный соперник тоже теряет экземпляры в матчах).
+function botCollection(myUniq,mm,myBkSize){
+  const target=Math.max(5,Math.min(120, myUniq + Math.round((Math.random()*2-1)*mm)));
+  const ids=[...Array(120).keys()];
+  for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
+  const own=ids.slice(0,target);
+  // боевая колода соперника: случайный срез его коллекции того же размера, что у игрока —
+  // реальный соперник теряет экземпляры так же и не состоит из одних легендарок
+  const size=Math.max(3,Math.min(CFG.bkSize, myBkSize, own.length));
+  for(let i=own.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[own[i],own[j]]=[own[j],own[i]];}
+  return own.slice(0,size);
+}
+function availableModes(){
+  const u=uniq();
+  return Object.entries(CFG.modes).filter(([k,m])=>u>=m.access).map(([k])=>k);
+}
+function startMatch(modeKey){
+  const m=CFG.modes[modeKey];
+  const bk=bkList();
+  if(bk.length<m.cards){ log(`Для режима ${m.name} нужно минимум ${m.cards} карт в боевой колоде`,'warn'); render(); return; }
+  const myHand=[]; const pool=[...bk];
+  for(let i=0;i<m.cards;i++){ myHand.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0].id); }
+  const botBk=botCollection(uniq(),m.mm,bk.length);
+  const botHand=[]; const bp=[...botBk];
+  for(let i=0;i<m.cards;i++){ botHand.push(bp.splice(Math.floor(Math.random()*bp.length),1)[0]); }
+  M={mode:modeKey,m,myHand,botHand,myWins:0,botWins:0,roundDraws:0,round:1,
+     namer:Math.random()<0.5?'me':'bot',phase:'',pendingStat:null,botCard:null,
+     myBonus:null,botBonus:null,myCard:null,myStat:null,lostCards:0,logs:[]};
+  M.firstNamer=M.namer;
+  prepRound();
+  render();
+}
+function prepRound(){
+  M.myBonus=null; M.botBonus=null; M.myCard=null; M.myStat=null; M.botCard=null; M.pendingStat=null;
+  M.botBonusPicked = Math.random()<CFG.botBonusChance ? Math.floor(Math.random()*BONUS.length) : null;
+  if(!M.botHand.length||!M.myHand.length){ finishMatch(); return; }
+  if(M.namer==='bot'){
+    // бот выбирает свою лучшую пару карта+характеристика
+    let best={v:-1};
+    M.botHand.forEach(id=>{ CARDS[id].st.forEach((v,s)=>{ if(v>best.v) best={v,id,s}; }); });
+    M.botCard=best.id; M.pendingStat=best.s; M.phase='respond';
+  } else {
+    M.phase='name';
+  }
+}
+function bonusOwnedList(){ return Object.entries(S.bonus).filter(([i,n])=>n>0).map(([i,n])=>({i:+i,n,...BONUS[+i]})); }
+function chooseMyBonus(i){ M.myBonus=(M.myBonus===i?null:i); render(); }
+function playRound(cardId,stat){
+  if(!M||M.phase==='over'||!M.myHand.length||!M.botHand.length){ if(M) finishMatch(); render(); return; }
+  const m=M.m;
+  let myCard=cardId, botCard, statIdx;
+  if(M.namer==='me'){
+    myCard=cardId; statIdx=stat;
+    // бот отвечает лучшей картой по этой характеристике
+    botCard=M.botHand.reduce((a,b)=>CARDS[b].st[statIdx]>CARDS[a].st[statIdx]?b:a);
+  } else {
+    statIdx=M.pendingStat; botCard=M.botCard; myCard=cardId;   // характеристика раскрывается только сейчас
+  }
+  // применение бонус-карт
+  let myV=CARDS[myCard].st[statIdx], botV=CARDS[botCard].st[statIdx];
+  const myB = M.myBonus!==null?BONUS[M.myBonus]:null;
+  const botB = M.botBonusPicked!==null?BONUS[M.botBonusPicked]:null;
+  let myShield=false, botShield=false;
+  const cancelledByMe = myB && myB.type==='cancel';
+  const cancelledByBot = botB && botB.type==='cancel';
+  const applyB=(b,who)=>{
+    if(!b) return;
+    if(who==='me'&&cancelledByBot&&b.type!=='cancel') return;
+    if(who==='bot'&&cancelledByMe&&b.type!=='cancel') return;
+    if(b.type==='up'){ if(who==='me') myV+=b.val; else botV+=b.val; }
+    else if(b.type==='down'){ if(who==='me') botV-=b.val; else myV-=b.val; }
+    else if(b.type==='rage'){ if(who==='me') myV=Math.round(myV*1.5); else botV=Math.round(botV*1.5); }
+    else if(b.type==='swap'){ if(who==='me') myV=Math.max(...CARDS[myCard].st); else botV=Math.max(...CARDS[botCard].st); }
+    else if(b.type==='shield'){ if(who==='me') myShield=true; else botShield=true; }
+    else if(b.type==='voice'){
+      if(who==='me'&&M.namer==='bot'){
+        let best={v:-1}; M.myHand.forEach(id=>{CARDS[id].st.forEach((v,s)=>{if(v>best.v)best={v,id,s};});});
+        statIdx=best.s; myCard=best.id;
+        botCard=M.botHand.reduce((a,b2)=>CARDS[b2].st[statIdx]>CARDS[a].st[statIdx]?b2:a);
+        myV=CARDS[myCard].st[statIdx]; botV=CARDS[botCard].st[statIdx];
+      }
+    }
+  };
+  applyB(myB,'me'); applyB(botB,'bot');
+  if(myB){ S.bonus[M.myBonus]--; S.stat.bonusUsed++;
+    if(myB.type==='down') S.stat.debuffUsed++;
+    if(myB.rar==='L') S.stat.legBonusUsed++; }
+  // исход
+  let res;
+  if(myV>botV) res='win'; else if(botV>myV) res='lose'; else res='draw';
+  const sname=CFG.statNames[statIdx];
+  let txt=`Раунд ${M.round}: ${CARDS[myCard].name} (${sname} ${myV}) против ${CARDS[botCard].name} (${botV})`;
+  if(res==='win'){
+    M.myWins++; S.stat.rounds++; S.stat.statWin[statIdx]++;
+    S.copies[botCard]=(S.copies[botCard]||0)+ (S.opened[botCard]?1:0);
+    if(!S.opened[botCard] && uniq()<cap()){ S.opened[botCard]=true; S.copies[botCard]=1; S.stat.newCards++; S.stat.newCardsToday++; txt+=' — победа, карта соперника новая!'; }
+    else if(!S.opened[botCard]){ txt+=' — победа, но потолок волны достигнут'; }
+    else { if(S.copies[botCard]>1){S.stat.dups++; const v=CFG.starValue[CARDS[botCard].rar]; S.stars+=v; S.stat.starsEarned+=v;} txt+=' — победа, карта забрана'; }
+    S.stat.cardsWon++;
+  } else if(res==='lose'){
+    M.botWins++; S.stat.roundsLost++;
+    if(myShield){ txt+=' — поражение, но Щит сохранил карту'; }
+    else { S.copies[myCard]=Math.max(0,S.copies[myCard]-1); S.stat.cardsLost++; M.lostCards++; txt+=' — поражение, экземпляр потерян'; }
+  } else { M.roundDraws++; S.stat.roundDraws++; txt+=' — ничья, карты остались у владельцев'; }
+  M.logs.unshift(txt);
+  M.myHand=M.myHand.filter(x=>x!==myCard);
+  M.botHand=M.botHand.filter(x=>x!==botCard);
+  M.round++; M.namer = M.namer==='me'?'bot':'me';
+  if(M.myWins>=m.need||M.botWins>=m.need||!M.myHand.length||!M.botHand.length) finishMatch();
+  else prepRound();
+  render();
+}
+function finishMatch(){
+  const m=M.m; S.stat.matches++; S.matchesToday++;
+  if(M.mode==='cls') S.stat.clsMatches++;
+  let k=1; for(const [n,mult] of CFG.rewardCurve){ if(S.matchesToday<=n){ k=mult; break; } }
+  let res, coins=0, rat=0;
+  if(M.myWins>M.botWins){
+    res='победа'; coins=Math.round(m.win*k); rat=Math.round(m.ratW*k);
+    S.stat.wins++; S.stat.streak++; S.stat.bestStreak=Math.max(S.stat.bestStreak,S.stat.streak);
+    if(M.mode==='pro') S.stat.proWins++;
+    if(M.mode!=='exp') S.stat.bigWins++;
+    if(M.lostCards===0) S.stat.cleanWin++;
+    if(M.botWins===0) S.stat.sweep++;
+  } else if(M.myWins<M.botWins){
+    res='поражение'; coins=Math.round(m.lose*k); S.stat.losses++; S.stat.streak=0;
+  } else {
+    res='ничья'; coins=Math.round(m.draw*k); rat=Math.round(m.ratD*k); S.stat.draws++; S.stat.streak=0;
+  }
+  S.coins+=coins; S.rating+=rat;
+  log(`${m.name}: ${res} ${M.myWins}:${M.botWins} — +${coins} монет${rat?`, +${rat} рейтинга`:''}${k<1?` (награда ${Math.round(k*100)}%)`:''}`, res==='победа'?'good':(res==='ничья'?'':'warn'));
+  checkAchievements();
+  M.phase='over'; M.result=res; M.coinsGot=coins; M.ratGot=rat;
+}
+function closeMatch(){ M=null; render(); }
+/* ================= РЕНДЕР ================= */
+const $=id=>document.getElementById(id);
+const RAR={C:'Обычная',R:'Редкая',L:'Легендарная'};
+function cardChip(id,extra=''){
+  const c=CARDS[id], n=S.copies[id]||0;
+  return `<div class="chip ${c.rar}${n===0?' ghost':''}" title="${c.name}\n${c.st.map((v,i)=>CFG.statNames[i]+': '+v).join('\n')}">
+    <b>${c.name}</b><span class="st">${c.st.join(' · ')}</span>${n>1?`<i class="cnt">×${n}</i>`:''}${extra}</div>`;
+}
+function render(){
+  const u=uniq();
+  $('hud').innerHTML=`
+   <div class="hudrow">
+     <span class="pill">День <b>${S.day||'—'}</b> / ${CFG.seasonDays}</span>
+     <span class="pill">Волна <b>${S.wave+1}</b> · потолок <b>${cap()}</b></span>
+     <span class="pill">Коллекция <b>${u}</b>/120</span>
+     <span class="pill">Колод <b>${closedDecks()}</b>/12</span>
+     <span class="pill coin">Монеты <b>${S.coins}</b></span>
+     <span class="pill star">Звёзды <b>${S.stars}</b></span>
+     <span class="pill">Рейтинг <b>${S.rating}</b></span>
+     <span class="pill">Бонус-карт <b>${Object.values(S.bonus).reduce((a,b)=>a+b,0)}</b></span>
+   </div>`;
+  $('btnNext').textContent = S.day===0?'Начать сезон':(S.seasonOver?'Сезон завершён':`Следующий день →`);
+  $('btnNext').disabled=S.seasonOver;
+  if(M){ renderMatch(); $('match').style.display='block'; } else { $('match').style.display='none'; }
+  renderTasks(); renderPvp(); renderCollection(); renderShop(); renderStats(); renderRules(); renderLog();
+}
+function renderTasks(){
+  let h='';
+  if(S.day===0){ $('tasks').innerHTML='<p class="muted">Нажмите «Начать сезон».</p>'; return; }
+  const pk=currentPack(), pkName=`Пачка ${pk+1}. ${CFG.dailyPackNames[pk]}`;
+  const t=DAILY_TASKS[S.dailyTaskIdx];
+  const prog=t?taskProgress(t):0, need=t?(t.n||1):1;
+  h+=`<h3>Ежедневное задание <span class="tag">${pkName} · выполнено ${S.dailyDone}/60</span></h3>`;
+  h+=`<div class="task ${S.dailyTaskDone?'done':(canDoDaily()?'ready':'')}">
+      <div><b>${t?t.t:'—'}</b><div class="muted">Награда: ${CFG.dailyTaskCoins[pk]} монет · шанс пака ${Math.round(CFG.dailyTaskPackChance[pk]*100)}%${t&&t.k!=='free'?` · прогресс ${Math.min(prog,need)}/${need}`:''}</div></div>
+      <button onclick="doDaily()" ${canDoDaily()?'':'disabled'}>${S.dailyTaskDone?'Выполнено':'Выполнить'}</button></div>`;
+  h+=`<h3>Еженедельные задания</h3>`;
+  CFG.weekly.forEach((w,i)=>{
+    const p=weeklyProgress(i), open=weekOf(S.day)>=i, ok=p.have>=p.need&&open&&!S.weeklyDone[i];
+    h+=`<div class="task ${S.weeklyDone[i]?'done':(ok?'ready':'')}">
+        <div><b>Неделя ${i+1}. ${w.t}</b><div class="muted">${w.lvl} · ${w.coins} монет · ${w.bonus} бонус-карт${w.pack?' · пак 5 карт':''} · прогресс ${Math.min(p.have,p.need)}/${p.need}${open?'':' · откроется позже'}</div></div>
+        <button onclick="doWeekly(${i})" ${ok?'':'disabled'}>${S.weeklyDone[i]?'Выполнено':'Забрать'}</button></div>`;
+  });
+  h+=`<h3>Социальные задания и друзья</h3>
+   <div class="task"><div><b>Разовое действие</b><div class="muted">${CFG.social.onceCoins} монет · выполнено ${S.socialOnce}/${CFG.social.onceCount}</div></div>
+     <button onclick="doSocialOnce()" ${S.socialOnce>=CFG.social.onceCount?'disabled':''}>Выполнить</button></div>
+   <div class="task ${S.socialToday?'done':''}"><div><b>Ежедневное социальное действие</b><div class="muted">${CFG.social.dailyCoins} монеты в день</div></div>
+     <button onclick="doSocialDaily()" ${S.socialToday?'disabled':''}>Выполнить</button></div>
+   <div class="task"><div><b>Пригласить друга</b><div class="muted">Приглашено ${S.friends} · этапов пройдено ${S.refStage}/4</div></div>
+     <button onclick="inviteFriend()">Пригласить</button></div>
+   <div class="task"><div><b>Отсканировать QR-код</b><div class="muted">${CFG.qr.bonusPerCode} бонус-карты · использовано ${S.qrUsed}/${CFG.qr.limit}</div></div>
+     <button onclick="scanQR()" ${S.qrUsed>=CFG.qr.limit?'disabled':''}>Сканировать</button></div>`;
+  $('tasks').innerHTML=h;
+}
+function renderPvp(){
+  if(S.day===0){ $('pvp').innerHTML=''; return; }
+  const av=availableModes(); let h='<h3>PvP</h3>';
+  h+=`<p class="muted">Сыграно сегодня: ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го 50%, с 9-го 25%. Боевая колода: ${bkList().length} карт, заблокировано ${S.blocked.length}/${S.slots}.</p><div class="row">`;
+  Object.entries(CFG.modes).forEach(([k,m])=>{
+    const ok=av.includes(k)&&!M&&bkList().length>=m.cards;
+    h+=`<button class="mode" onclick="startMatch('${k}')" ${ok?'':'disabled'}>
+      <b>${m.name}</b><span>${m.cards} карт · до ${m.need} побед</span>
+      <span class="muted">${ok?`+${m.win} / ${m.draw} / ${m.lose} монет`:`нужно ${m.access} уник. карт`}</span></button>`;
+  });
+  h+='</div>';
+  $('pvp').innerHTML=h;
+}
+function renderMatch(){
+  const m=M.m; let h=`<div class="mhead"><b>${m.name}</b> · раунд ${M.round} · счёт <b>${M.myWins}</b>:<b>${M.botWins}</b>${M.roundDraws?` · ничьих раундов ${M.roundDraws}`:''} · до ${m.need} побед</div>`;
+  if(M.phase==='over'){
+    h+=`<div class="mres ${M.result==='победа'?'good':(M.result==='ничья'?'':'bad')}">Матч окончен: ${M.result} ${M.myWins}:${M.botWins} · +${M.coinsGot} монет${M.ratGot?`, +${M.ratGot} рейтинга`:''}</div>
+        <button class="primary" onclick="closeMatch()">Закрыть</button>`;
+  } else {
+    const own=bonusOwnedList();
+    h+=`<div class="turn">${M.namer==='me'?'Ваш ход: выберите карту и характеристику':'Ход соперника. Характеристика скрыта — выберите карту вслепую'}</div>`;
+    if(own.length){
+      h+=`<div class="bonusbar"><span class="muted">Бонус-карта на этот раунд:</span> `;
+      own.forEach(b=>{ h+=`<button class="bchip ${M.myBonus===b.i?'sel':''} ${b.rar}" title="${b.desc}" onclick="chooseMyBonus(${b.i})">${b.name} <i>×${b.n}</i></button>`; });
+      h+=`</div>`;
+    }
+    h+='<div class="hand">';
+    M.myHand.forEach(id=>{
+      const c=CARDS[id];
+      h+=`<div class="hcard ${c.rar}"><b>${c.name}</b><div class="stats">`;
+      if(M.namer==='me'){
+        c.st.forEach((v,s)=>{
+          h+=`<button class="stat" onclick="playRound(${id},${s})">${CFG.statNames[s]} <b>${v}</b></button>`;
+        });
+      } else {
+        c.st.forEach((v,s)=>{ h+=`<div class="stat flat">${CFG.statNames[s]} <b>${v}</b></div>`; });
+      }
+      h+='</div>';
+      if(M.namer==='bot') h+=`<button class="answer" onclick="playRound(${id},-1)">Ответить этой картой</button>`;
+      h+='</div>';
+    });
+    h+='</div>';
+    h+=`<div class="muted">У соперника карт: ${M.botHand.length}</div>`;
+  }
+  if(M.logs.length) h+=`<div class="mlog">${M.logs.slice(0,6).map(x=>`<div>${x}</div>`).join('')}</div>`;
+  $('match').innerHTML=h;
+}
+function renderCollection(){
+  let h=`<h3>Коллекция <span class="tag">${uniq()}/120 · экземпляров ${S.copies.reduce((a,b)=>a+b,0)}</span></h3>`;
+  h+=`<p class="muted">Блокировка: карта в слоте не участвует в матчах и не может быть потеряна. Слотов куплено ${S.slots}/5, занято ${S.blocked.length}.
+     ${S.slots<5?`<button onclick="buySlot()">Купить слот ${S.slots+1} за ${CFG.slotPrices[S.slots]} монет</button>`:''}</p>`;
+  for(let d=0;d<12;d++){
+    const ids=deckCards(d), have=ids.filter(i=>S.opened[i]).length;
+    const isTarget = (()=>{ for(let x=0;x<12;x++){ if(!deckClosed(x)) return x===d; } return false; })();
+    h+=`<div class="deck ${have===10?'full':''}"><div class="dh"><b>${CFG.animals[d]}</b> <span class="tag">${have}/10${have===10?' · собрана':''}${isTarget?' · приоритет 55%':''}</span></div><div class="cards">`;
+    ids.forEach(i=>{
+      const blocked=S.blocked.includes(i);
+      const btn=S.opened[i]?`<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`:'';
+      h+=cardChip(i,btn);
+    });
+    h+='</div></div>';
+  }
+  $('collection').innerHTML=h;
+}
+function renderShop(){
+  let h='<h3>Паки за звёзды</h3><div class="row">';
+  CFG.packs.forEach(p=>{
+    h+=`<button class="mode" onclick="buyPack('${p.id}')" ${S.stars>=p.price?'':'disabled'}>
+      <b>${p.name}</b><span>${p.price}★ · ${p.cards} карт</span>
+      <span class="muted">${p.guarantee==='new'?'минимум 1 новая':(p.guarantee==='rare'?'минимум 1 редкая':'без гарантии')}</span></button>`;
+  });
+  h+='</div><h3>Витрина</h3><div class="row">';
+  CFG.shop.forEach(p=>{
+    const got=S.prizes[p.id]||0;
+    h+=`<button class="mode" onclick="buyPrize('${p.id}')" ${S.coins>=p.price?'':'disabled'}>
+      <b>${p.name}</b><span>${p.price} монет</span><span class="muted">${p.type}${got?` · куплено ${got}`:''}</span></button>`;
+  });
+  h+='</div>';
+  const own=bonusOwnedList();
+  h+=`<h3>Бонус-карты <span class="tag">${own.reduce((a,b)=>a+b.n,0)} шт.</span></h3><div class="bonuslist">`;
+  own.sort((a,b)=>({C:0,R:1,L:2})[b.rar]-({C:0,R:1,L:2})[a.rar]);
+  own.forEach(b=>{ h+=`<div class="bchip ${b.rar}" title="${b.desc}">${b.name} <i>×${b.n}</i></div>`; });
+  if(!own.length) h+='<span class="muted">Пока нет</span>';
+  h+='</div>';
+  $('shop').innerHTML=h;
+}
+function renderStats(){
+  const s=S.stat, tot=s.matches||1;
+  const rows=[
+    ['Уникальных карт',`${uniq()} / 120`],['Колод закрыто',`${closedDecks()} / 12`],
+    ['Экземпляров на руках',S.copies.reduce((a,b)=>a+b,0)],
+    ['Матчей сыграно',s.matches],['Побед / ничьих / поражений',`${s.wins} / ${s.draws} / ${s.losses}`],
+    ['Винрейт',`${Math.round(100*s.wins/tot)}%`],['Доля ничьих',`${Math.round(100*s.draws/tot)}%`],
+    ['Раундов выиграно / проиграно',`${s.rounds} / ${s.roundsLost}`],['Ничьих в раундах',s.roundDraws],
+    ['Карт выиграно / потеряно',`${s.cardsWon} / ${s.cardsLost}`],
+    ['Дублей получено',s.dups],['Звёзд заработано',s.starsEarned],
+    ['Паков куплено',S.packsBought],['Бонус-карт применено',s.bonusUsed],
+    ['Ежедневных заданий',`${S.dailyDone} / 60`],['Друзей приглашено',S.friends],
+    ['QR-кодов',`${S.qrUsed} / ${CFG.qr.limit}`],['Монет за сезон',S.coins],['Рейтинг',S.rating],
+  ];
+  $('stats').innerHTML='<h3>Статистика</h3><table>'+rows.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')+'</table>';
+}
+function renderRules(){
+  $('rules').innerHTML=`<h3>Правила модели</h3>
+  <div class="muted" style="line-height:1.7">
+  <b>Волны.</b> Волна не открывает карты — она поднимает потолок уникальных карт: 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120. Дни открытия 1, 2, 4, 7, 11, 16, 22, 29, 37, 46. Раньше 46-го дня коллекцию закрыть невозможно.<br><br>
+  <b>Выдача.</b> Карты приходят только паками по 5, каждая карта разыгрывается отдельно. Шаг 0 — потолок волны. Шаг 1 — новизна: 85% пока собрано меньше 30% коллекции, дальше 65 / 45 / 30%. Шаг 2 — если новая, колода выбирается по лестнице 55 / 25 / 11 / 5 / 2,3 / 1% от первой незакрытой, затем карта внутри колоды равновероятно. Шаг 3 — если дубль, редкость 70 / 20 / 10 и +1 / 2 / 3★.<br><br>
+  <b>PvP.</b> Жеребьёвка определяет первый ход, дальше чередование. Называющий выбирает карту и характеристику, соперник отвечает картой вслепую — характеристика раскрывается только при сравнении. Проигравший раунд отдаёт экземпляр своей карты победителю. Ничья в раунде не переигрывается. Ничья в матче: карты не переходят, монеты и рейтинг в уменьшенном размере.<br><br>
+  <b>Потери.</b> Из коллекции карта не пропадает никогда — теряется экземпляр. Дубли работают буфером: пока есть лишняя копия, карта остаётся в боевой колоде. Если копий не осталось, карта выпадает из боевой колоды до следующего получения.<br><br>
+  <b>Блокировка.</b> 5 многоразовых слотов, цена 0 / 25 / 60 / 150 / 400 монет разово. Карта в слоте не участвует в матчах и не может быть потеряна.<br><br>
+  <b>Награда PvP.</b> Полная за первые 5 матчей в сутки, с 6-го 50%, с 9-го 25%.<br><br>
+  <b>Характеристики.</b> Обычная 53–169, редкая 104–248, легендарная 189–302, усиленная легендарная 228–344. Минимум легендарки выше максимума обычной — числовыми бонус-картами её не пробить, только Яростью (×1,5).
+  </div>`;
+}
+function renderLog(){
+  $('log').innerHTML='<h3>Журнал</h3>'+S.log.slice(0,60).map(l=>`<div class="le ${l.cls||''}"><span>Д${l.d}</span> ${l.msg}</div>`).join('');
+}
+/* ================= СОХРАНЕНИЕ ================= */
+function save(){ try{ localStorage.setItem('bf_demo',JSON.stringify(S)); log('Сохранено','good'); }catch(e){ log('Сохранение недоступно','warn'); } render(); }
+function load(){ try{ const d=localStorage.getItem('bf_demo'); if(d){ S=JSON.parse(d); log('Загружено','good'); } }catch(e){} render(); }
+function reset(){ if(confirm('Начать заново?')){ S=newState(); M=null; render(); } }
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='babyfox-save.json'; a.click();
+}
+/* ================= АВТОПРОГОН ================= */
+function autoDays(n){
+  for(let k=0;k<n;k++){
+    if(S.seasonOver) break;
+    nextDay();
+    if(canDoDaily()) doDaily();
+    if(!S.socialToday) doSocialDaily();
+    CFG.weekly.forEach((w,i)=>{ const p=weeklyProgress(i); if(!S.weeklyDone[i]&&weekOf(S.day)>=i&&p.have>=p.need) doWeekly(i); });
+  }
+  render();
+}
+window.addEventListener('DOMContentLoaded',()=>{ render(); });
+</script></body></html>
