@@ -49,6 +49,8 @@ button.mode span{font-size:12px;color:var(--muted)}
 .chip .cnt{position:absolute;top:4px;right:24px;color:var(--acc);font-style:normal;font-size:11px}
 .lock{position:absolute;top:2px;right:2px;padding:1px 4px;font-size:11px;background:none;border:none}
 .lock.on{color:var(--acc)}
+.bkpick{position:absolute;top:2px;right:22px;padding:1px 4px;font-size:10px;background:none;border:none;color:var(--muted)}
+.bkpick.on{color:var(--acc2)}
 .mhead{font-size:15px;margin-bottom:8px}
 .turn{background:var(--panel2);border:1px solid var(--acc);border-radius:7px;padding:7px 10px;margin-bottom:8px}
 .hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:8px}
@@ -118,14 +120,13 @@ const CFG = {
   sums:  { C:400, R:650, L:950, L1:1100 },
   waveCaps: [24,40,54,67,79,90,100,108,115,120],
   waveDays: [1,2,4,7,11,16,22,29,37,46],
-  wavePackOn: [2,4,6,8,10],
   novelty: [[0.30,0.85],[0.60,0.65],[0.85,0.45],[1.01,0.30]],
   ladderBase: 0.45,
   dupRarity: { C:0.70, R:0.20, L:0.10 },
   starValue: { C:1, R:2, L:3 },
   loginCoins: {1:5,2:5,4:10,6:15},
   loginBonus: {3:1,5:1,7:3},
-  loginPackDay: 7,
+  loginPackDays: [4,7],
   dailyTaskCoins: [10,11,12,13,14,15],
   dailyTaskPackChance: [0.08,0.09,0.11,0.12,0.14,0.16],
   dailyPackNames: ['Знакомство','Первые шаги','Освоение','Тактика','Мастерство','Финал'],
@@ -150,7 +151,7 @@ const CFG = {
   referralRepeatBonus: 1, referralRepeatEvery: 10, referralRepeatMax: 5,
   qr: { bonusPerCode:3, limit:120 },
   modes: {
-    exp: {name:'Экспресс', access:5,  cards:3, need:2, win:6,  draw:4,  lose:2, ratW:15, ratD:6,  mm:5},
+    exp: {name:'Экспресс', access:5,  cards:3, need:2, win:6,  draw:4,  lose:2, ratW:15, ratD:6,  mm:5,  comp:{L:1,R:1,C:1}},
     cls: {name:'Классика', access:15, cards:5, need:3, win:10, draw:6,  lose:3, ratW:25, ratD:10, mm:7},
     pro: {name:'Профи',    access:30, cards:7, need:4, win:15, draw:10, lose:5, ratW:35, ratD:14, mm:10},
   },
@@ -302,7 +303,7 @@ function newState(){
     day:0, wave:0, coins:0, stars:0, rating:0,
     copies:new Array(120).fill(0), opened:new Array(120).fill(false),
     bonus:{},                       // индекс бонус-карты -> количество
-    slots:1, blocked:[],            // купленные слоты и заблокированные карты
+    slots:1, blocked:[], bkPicked:[],   // слоты, заблокированные карты и ручной выбор БК
     dailyDone:0, dailyTaskIdx:null, dailyTaskDone:false,
     weeklyDone:new Array(8).fill(false),
     socialOnce:0, socialToday:false,
@@ -325,11 +326,37 @@ const uniq=()=>S.opened.filter(Boolean).length;
 const cap=()=>CFG.waveCaps[S.wave];
 const deckClosed=d=>deckCards(d).every(i=>S.opened[i]);
 const closedDecks=()=>{let n=0;for(let d=0;d<12;d++) if(deckClosed(d)) n++; return n;};
-const bkList=()=>{ // боевая колода: до 50 лучших, без заблокированных
-  const own=CARDS.filter(c=>S.copies[c.id]>0 && !S.blocked.includes(c.id));
-  own.sort((a,b)=>b.st.reduce((x,y)=>x+y,0)-a.st.reduce((x,y)=>x+y,0));
-  return own.slice(0,CFG.bkSize);
+// Боевая колода: если карт на руках 50 или меньше — входят все.
+// Если больше — игрок сам отмечает, какие 50 взять (S.bkPicked).
+const ownedCards=()=>CARDS.filter(c=>S.copies[c.id]>0 && !S.blocked.includes(c.id));
+const bkList=()=>{
+  const own=ownedCards();
+  if(own.length<=CFG.bkSize) return own;
+  const picked=own.filter(c=>S.bkPicked.includes(c.id));
+  if(picked.length>=CFG.bkSize) return picked.slice(0,CFG.bkSize);
+  // добираем до 50 по порядку коллекции, чтобы колода не оказалась пустой
+  const rest=own.filter(c=>!S.bkPicked.includes(c.id));
+  return picked.concat(rest).slice(0,CFG.bkSize);
 };
+const bkNeedsPick=()=>ownedCards().length>CFG.bkSize;
+// Плотность боевой колоды — ранг для матчмейкинга
+const RARW={C:1,R:2,L:4};
+function bkDensity(list){
+  const b=list||bkList();
+  if(!b.length) return 0;
+  return b.reduce((a,c)=>a+RARW[c.rar],0)/b.length;
+}
+function toggleBk(id){
+  const own=ownedCards();
+  if(own.length<=CFG.bkSize) return;
+  const i=S.bkPicked.indexOf(id);
+  if(i>=0) S.bkPicked.splice(i,1);
+  else{
+    if(S.bkPicked.length>=CFG.bkSize){ log('В боевой колоде уже 50 карт','warn'); render(); return; }
+    S.bkPicked.push(id);
+  }
+  render();
+}
 function log(msg,cls){ S.log.unshift({d:S.day,msg,cls}); if(S.log.length>250) S.log.pop(); }
 
 /* ================= ВЫДАЧА КАРТЫ ================= */
@@ -418,13 +445,12 @@ function nextDay(){
   while(S.wave<9 && S.day>=CFG.waveDays[S.wave+1]){
     S.wave++;
     log(`Открылась волна ${S.wave+1}: потолок коллекции ${cap()} карт`,'good');
-    if(CFG.wavePackOn.includes(S.wave+1)){ openPack(5); log('Пак за открытие волны: 5 карт','good'); }
   }
   // вход
   const dow=((S.day-1)%7)+1;
   const c=CFG.loginCoins[dow]||0; if(c){ S.coins+=c; }
   const b=CFG.loginBonus[dow]||0; if(b){ addBonus(b); }
-  if(dow===CFG.loginPackDay){ openPack(5); log('Пак за ежедневный вход: 5 карт','good'); }
+  if(CFG.loginPackDays.includes(dow)){ openPack(5); log(`Пак за ежедневный вход (день ${dow} цикла): 5 карт`,'good'); }
   if(S.day===1){ openPack(5,{forceNew:true}); log('Стартовый пак: 5 гарантированно новых карт','good'); }
   if(S.day===2){ openPack(5,{forceNew:true}); addBonus(3); log('Пак второго дня: 5 новых карт и 3 бонус-карты','good'); }
   rollDailyTask();
@@ -508,9 +534,16 @@ function buyPack(id){
   const p=CFG.packs.find(x=>x.id===id);
   if(S.stars<p.price){ log('Недостаточно звёзд','warn'); render(); return; }
   S.stars-=p.price; S.packsBought++;
+  const wasAtCap = uniq()>=cap();
   const got=openPack(p.cards,{guarantee:p.guarantee});
   const nw=got.filter(g=>g.isNew).length;
-  log(`${p.name} за ${p.price}★: ${nw} новых из ${got.length}`,'good'); render();
+  if(p.guarantee==='new' && wasAtCap){
+    addBonus(2);
+    log(`${p.name} за ${p.price}★: новых карт пока нет, следующая волна ещё не открылась. Начислено 2 бонус-карты сверх пака`,'warn');
+  } else {
+    log(`${p.name} за ${p.price}★: ${nw} новых из ${got.length}`,'good');
+  }
+  render();
 }
 function buySlot(){
   if(S.slots>=5) return;
@@ -538,28 +571,36 @@ let M=null; // текущий матч
 // что и у игрока (реальный соперник тоже теряет экземпляры в матчах).
 function botCollection(myUniq,mm,myBkSize){
   const target=Math.max(5,Math.min(120, myUniq + Math.round((Math.random()*2-1)*mm)));
-  const ids=[...Array(120).keys()];
+  // соперник — живой игрок: у него такой же по составу запас экземпляров, а не полная коллекция
+  const myBk=bkList(); const mine={L:0,R:0,C:0}; myBk.forEach(c=>mine[c.rar]++);
+  const byR={L:[],R:[],C:[]};
+  CARDS.forEach(c=>byR[c.rar].push(c.id));
+  Object.values(byR).forEach(a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} });
+  const jitter=x=>Math.max(0,Math.round(x*(0.92+Math.random()*0.16)));   // разрыв плотности в пределах 8%
+  const own=[...byR.L.slice(0,jitter(mine.L)), ...byR.R.slice(0,jitter(mine.R)), ...byR.C.slice(0,jitter(mine.C))];
+  if(own.length<3){ const ids=[...Array(120).keys()]; return ids.slice(0,Math.max(3,myBkSize)); }
+  const ids=own;
+  const size=Math.max(3,Math.min(CFG.bkSize, myBkSize, ids.length));
   for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
-  const own=ids.slice(0,target);
-  // боевая колода соперника: случайный срез его коллекции того же размера, что у игрока —
-  // реальный соперник теряет экземпляры так же и не состоит из одних легендарок
-  const size=Math.max(3,Math.min(CFG.bkSize, myBkSize, own.length));
-  for(let i=own.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[own[i],own[j]]=[own[j],own[i]];}
-  return own.slice(0,size);
+  return ids.slice(0,size);
 }
 function availableModes(){
   const u=uniq();
   return Object.entries(CFG.modes).filter(([k,m])=>u>=m.access).map(([k])=>k);
 }
+// Рука на матч: случайные N карт из боевой колоды, без ограничений по редкости.
+function drawHand(ids,m){
+  const pool=[...ids];
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  return pool.slice(0,m.cards);
+}
 function startMatch(modeKey){
   const m=CFG.modes[modeKey];
   const bk=bkList();
   if(bk.length<m.cards){ log(`Для режима ${m.name} нужно минимум ${m.cards} карт в боевой колоде`,'warn'); render(); return; }
-  const myHand=[]; const pool=[...bk];
-  for(let i=0;i<m.cards;i++){ myHand.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0].id); }
+  const myHand=drawHand(bk.map(c=>c.id), m);
   const botBk=botCollection(uniq(),m.mm,bk.length);
-  const botHand=[]; const bp=[...botBk];
-  for(let i=0;i<m.cards;i++){ botHand.push(bp.splice(Math.floor(Math.random()*bp.length),1)[0]); }
+  const botHand=drawHand(botBk, m);
   M={mode:modeKey,m,myHand,botHand,myWins:0,botWins:0,roundDraws:0,round:1,
      namer:Math.random()<0.5?'me':'bot',phase:'',pendingStat:null,botCard:null,
      myBonus:null,botBonus:null,myCard:null,myStat:null,lostCards:0,logs:[]};
@@ -588,8 +629,8 @@ function playRound(cardId,stat){
   let myCard=cardId, botCard, statIdx;
   if(M.namer==='me'){
     myCard=cardId; statIdx=stat;
-    // бот отвечает лучшей картой по этой характеристике
-    botCard=M.botHand.reduce((a,b)=>CARDS[b].st[statIdx]>CARDS[a].st[statIdx]?b:a);
+    // бот отвечает ВСЛЕПУЮ: характеристику он не видит, поэтому выкладывает сильнейшую карту
+    botCard=M.botHand.reduce((a,b)=>CARDS[b].st.reduce((x,y)=>x+y,0)>CARDS[a].st.reduce((x,y)=>x+y,0)?b:a);
   } else {
     statIdx=M.pendingStat; botCard=M.botCard; myCard=cardId;   // характеристика раскрывается только сейчас
   }
@@ -690,6 +731,7 @@ function render(){
      <span class="pill star">Звёзды <b>${S.stars}</b></span>
      <span class="pill">Рейтинг <b>${S.rating}</b></span>
      <span class="pill">Бонус-карт <b>${Object.values(S.bonus).reduce((a,b)=>a+b,0)}</b></span>
+     <span class="pill">Плотность БК <b>${bkDensity().toFixed(2)}</b></span>
    </div>`;
   $('btnNext').textContent = S.day===0?'Начать сезон':(S.seasonOver?'Сезон завершён':`Следующий день →`);
   $('btnNext').disabled=S.seasonOver;
@@ -727,7 +769,7 @@ function renderTasks(){
 function renderPvp(){
   if(S.day===0){ $('pvp').innerHTML=''; return; }
   const av=availableModes(); let h='<h3>PvP</h3>';
-  h+=`<p class="muted">Сыграно сегодня: ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го 50%, с 9-го 25%. Боевая колода: ${bkList().length} карт, заблокировано ${S.blocked.length}/${S.slots}.</p><div class="row">`;
+  h+=`<p class="muted">Сыграно сегодня: ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го 50%, с 9-го 25%. Боевая колода: ${bkList().length} карт, плотность ${bkDensity().toFixed(2)}, заблокировано ${S.blocked.length}/${S.slots}. Соперник подбирается с разрывом плотности не более 8%.</p><div class="row">`;
   Object.entries(CFG.modes).forEach(([k,m])=>{
     const ok=av.includes(k)&&!M&&bkList().length>=m.cards;
     h+=`<button class="mode" onclick="startMatch('${k}')" ${ok?'':'disabled'}>
@@ -773,6 +815,8 @@ function renderMatch(){
 }
 function renderCollection(){
   let h=`<h3>Коллекция <span class="tag">${uniq()}/120 · экземпляров ${S.copies.reduce((a,b)=>a+b,0)}</span></h3>`;
+  const own=ownedCards().length, need=bkNeedsPick();
+  h+=`<p class="muted">Боевая колода: ${bkList().length} из ${CFG.bkSize}. ${need?`Карт на руках ${own} — больше 50, поэтому колоду собираете вручную: отмечайте карты значком ✓. Отмечено ${S.bkPicked.length} из 50, остальные добираются по порядку коллекции.`:`Карт на руках ${own} — все входят в боевую колоду автоматически.`}</p>`;
   h+=`<p class="muted">Блокировка: карта в слоте не участвует в матчах и не может быть потеряна. Слотов куплено ${S.slots}/5, занято ${S.blocked.length}.
      ${S.slots<5?`<button onclick="buySlot()">Купить слот ${S.slots+1} за ${CFG.slotPrices[S.slots]} монет</button>`:''}</p>`;
   for(let d=0;d<12;d++){
@@ -781,7 +825,11 @@ function renderCollection(){
     h+=`<div class="deck ${have===10?'full':''}"><div class="dh"><b>${CFG.animals[d]}</b> <span class="tag">${have}/10${have===10?' · собрана':''}${isTarget?' · приоритет 55%':''}</span></div><div class="cards">`;
     ids.forEach(i=>{
       const blocked=S.blocked.includes(i);
-      const btn=S.opened[i]?`<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`:'';
+      let btn=S.opened[i]?`<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`:'';
+      if(need && S.copies[i]>0 && !blocked){
+        const on=S.bkPicked.includes(i);
+        btn+=`<button class="bkpick ${on?'on':''}" onclick="toggleBk(${i})">${on?'✓':'+'}</button>`;
+      }
       h+=cardChip(i,btn);
     });
     h+='</div></div>';
@@ -790,10 +838,17 @@ function renderCollection(){
 }
 function renderShop(){
   let h='<h3>Паки за звёзды</h3><div class="row">';
+  const atCap = uniq()>=cap();
   CFG.packs.forEach(p=>{
+    let sub = p.guarantee==='new'?'минимум 1 новая':(p.guarantee==='rare'?'минимум 1 редкая':'без гарантии');
+    let note='';
+    if(p.guarantee==='new' && atCap){
+      sub='и минимум 2 бонус-карты';
+      note='<span class="muted">Новые карты закончились до следующей волны</span>';
+    }
     h+=`<button class="mode" onclick="buyPack('${p.id}')" ${S.stars>=p.price?'':'disabled'}>
       <b>${p.name}</b><span>${p.price}★ · ${p.cards} карт</span>
-      <span class="muted">${p.guarantee==='new'?'минимум 1 новая':(p.guarantee==='rare'?'минимум 1 редкая':'без гарантии')}</span></button>`;
+      <span class="muted">${sub}</span>${note}</button>`;
   });
   h+='</div><h3>Витрина</h3><div class="row">';
   CFG.shop.forEach(p=>{
@@ -829,7 +884,7 @@ function renderStats(){
 function renderRules(){
   $('rules').innerHTML=`<h3>Правила модели</h3>
   <div class="muted" style="line-height:1.7">
-  <b>Волны.</b> Волна не открывает карты — она поднимает потолок уникальных карт: 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120. Дни открытия 1, 2, 4, 7, 11, 16, 22, 29, 37, 46. Раньше 46-го дня коллекцию закрыть невозможно.<br><br>
+  <b>Волны.</b> Волна не открывает карты и не даёт паков — она поднимает потолок уникальных карт: 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120. Дни открытия 1, 2, 4, 7, 11, 16, 22, 29, 37, 46. Раньше 46-го дня коллекцию закрыть невозможно.<br><br>
   <b>Выдача.</b> Карты приходят только паками по 5, каждая карта разыгрывается отдельно. Шаг 0 — потолок волны. Шаг 1 — новизна: 85% пока собрано меньше 30% коллекции, дальше 65 / 45 / 30%. Шаг 2 — если новая, колода выбирается по лестнице 55 / 25 / 11 / 5 / 2,3 / 1% от первой незакрытой, затем карта внутри колоды равновероятно. Шаг 3 — если дубль, редкость 70 / 20 / 10 и +1 / 2 / 3★.<br><br>
   <b>PvP.</b> Жеребьёвка определяет первый ход, дальше чередование. Называющий выбирает карту и характеристику, соперник отвечает картой вслепую — характеристика раскрывается только при сравнении. Проигравший раунд отдаёт экземпляр своей карты победителю. Ничья в раунде не переигрывается. Ничья в матче: карты не переходят, монеты и рейтинг в уменьшенном размере.<br><br>
   <b>Потери.</b> Из коллекции карта не пропадает никогда — теряется экземпляр. Дубли работают буфером: пока есть лишняя копия, карта остаётся в боевой колоде. Если копий не осталось, карта выпадает из боевой колоды до следующего получения.<br><br>
