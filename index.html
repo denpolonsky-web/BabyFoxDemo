@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BabyFox Лесная лига — DEMO final mobile · optimized</title>
+<title>BabyFox Лесная лига — DEMO final mobile · 6-profile vertical stats v17</title>
 <style>
 :root{
   --bg:#0E1310; --panel:#172019; --panel2:#1E2A21; --line:#2C3A2F;
@@ -872,6 +872,414 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
 .storeplan th:first-child,.storeplan td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
 @media(max-width:380px){.shopgrid,.usercards{grid-template-columns:1fr}.trow{grid-template-columns:1fr 80px 54px}}
 
+
+/* ===== Battle UX v4: visual bottom fan carousel ===== */
+.gopp{margin-bottom:4px}
+.goppbar{display:flex;align-items:center;justify-content:center;gap:9px;min-height:58px}
+.gbacks{flex-wrap:nowrap;overflow:hidden;max-width:calc(100% - 92px);justify-content:flex-start}
+.roundstat{
+  flex:0 0 auto;min-width:74px;padding:7px 8px;border-radius:10px;
+  border:1px solid var(--acc);background:rgba(232,137,43,.12);text-align:left
+}
+.roundstat span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.roundstat b{display:block;font-size:12px;line-height:1.15;color:var(--ink);margin-top:2px}
+
+/* Рука — настоящий веер у нижней кромки экрана */
+.ghand{
+  display:flex!important;grid-template-columns:none!important;
+  align-items:flex-end;gap:0;
+  overflow-x:auto;overflow-y:visible;
+  scroll-snap-type:x mandatory;
+  padding:48px 18vw 10px;
+  margin:-14px -12px 2px;
+  min-height:248px;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  perspective:900px
+}
+.ghand::-webkit-scrollbar{display:none}
+
+.fanitem{
+  flex:0 0 58%;
+  max-width:205px;
+  min-width:160px;
+  scroll-snap-align:center;
+  position:relative;
+  margin-left:-48px;
+  transform-origin:50% 100%;
+  opacity:.82;
+  z-index:1;
+  transition:transform .22s ease,opacity .18s ease,filter .18s ease,margin .22s ease
+}
+.fanitem:first-child{margin-left:0}
+
+.fanitem .pcard{
+  min-height:132px;
+  border-radius:12px;
+  transform:scale(.68);
+  transform-origin:50% 100%;
+  transition:transform .22s ease,box-shadow .22s ease;
+  box-shadow:0 7px 18px rgba(0,0,0,.28)
+}
+.fanitem .pcard .pname{font-size:10px}
+.fanitem .pcard .pface{height:32px;font-size:20px}
+.fanitem .pcard .pstat{font-size:8px;padding:3px 6px}
+.fanitem .pcard .pstat b{font-size:10px}
+.fanitem .pcard .prar{font-size:7px}
+
+/* Карты вокруг центра расходятся веером */
+.fanitem[data-fan="-3"]{transform:translateY(28px) rotate(-16deg)}
+.fanitem[data-fan="-2"]{transform:translateY(17px) rotate(-10deg)}
+.fanitem[data-fan="-1"]{transform:translateY(8px) rotate(-5deg)}
+.fanitem[data-fan="1"]{transform:translateY(8px) rotate(5deg)}
+.fanitem[data-fan="2"]{transform:translateY(17px) rotate(10deg)}
+.fanitem[data-fan="3"]{transform:translateY(28px) rotate(16deg)}
+
+.fanitem.active{
+  z-index:10;
+  opacity:1;
+  margin-left:-24px;
+  margin-right:24px;
+  transform:translateY(-18px) rotate(0deg) scale(1.02)
+}
+.fanitem.active .pcard{
+  transform:scale(1.28);
+  box-shadow:0 16px 38px rgba(0,0,0,.48)
+}
+.fanitem.active .pcard .pname{font-size:14px}
+.fanitem.active .pcard .pface{height:46px;font-size:29px}
+.fanitem.active .pcard .pstat{font-size:10px;padding:4px 8px}
+.fanitem.active .pcard .pstat b{font-size:14px}
+.fanitem.active .pcard .prar{font-size:9px}
+
+.fanitem.fit .pcard{box-shadow:0 0 0 2px rgba(122,182,72,.62),0 8px 24px rgba(0,0,0,.35)}
+.fanitem.fit::after{
+  content:"подходит";position:absolute;right:2px;top:18px;z-index:16;
+  font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  color:#dff3ce;background:#34512b;border:1px solid #6b9a4f;border-radius:999px;padding:2px 5px
+}
+.fanitem.best::after{content:"лучший";background:#573b18;border-color:var(--acc);color:#ffd9a2}
+.carouselhint{text-align:center;font-size:10px;color:var(--muted);margin:-8px 0 6px}
+
+.bonusdecision{
+  border:1px solid var(--line);background:rgba(0,0,0,.16);border-radius:12px;padding:9px;margin-top:8px
+}
+.bonusdecision.pending{border-color:#795f39}
+.bonusdecision.done{border-color:#456a38}
+.bonusdecision .bdtitle{font-size:12px;font-weight:800;margin-bottom:2px}
+.bonusdecision .bdsub{font-size:10.5px;color:var(--muted);line-height:1.35}
+.bonusactions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.bonusactions button{padding:10px 8px;border-radius:10px}
+.gbtn:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.25)}
+.gbonus{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:9px}
+.gbonus .bchip{flex:0 0 168px;width:168px;scroll-snap-align:start}
+.gbonus .bchip.fit{border-color:#587c42}
+.gbonus .bchip.best{box-shadow:0 0 0 1px var(--acc) inset}
+
+@media(max-width:460px){
+  .ghand{padding-left:20vw;padding-right:20vw;min-height:242px}
+  .fanitem{flex-basis:60%;min-width:154px;max-width:198px;margin-left:-46px}
+  .fanitem.active .pcard{transform:scale(1.25)}
+  .gbacks{max-width:calc(100% - 82px)}
+  .roundstat{min-width:66px;padding:6px}
+}
+
+
+/* ===== fan UX v6 final overrides ===== */
+/* Веер не режет активную карту сверху */
+.ghand{
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:104px 18px 14px!important;
+  margin:0 -12px 2px!important;
+  min-height:304px!important;
+  align-items:flex-end!important;
+  scroll-snap-type:x mandatory!important;
+}
+.fanitem{
+  scroll-snap-align:start!important;
+}
+.fanitem.active{
+  margin-left:0!important;
+  margin-right:22px!important;
+  transform:translateY(-6px) rotate(0deg) scale(1.01)!important;
+}
+.fanitem.active .pcard{
+  transform:scale(1.20)!important;
+}
+@media(max-width:460px){
+  .ghand{
+    padding:100px 16px 14px!important;
+    min-height:296px!important;
+  }
+  .fanitem.active .pcard{transform:scale(1.18)!important}
+}
+
+
+/* ===== fan UX v7 position tweak ===== */
+.ghand{
+  padding-left:34vw!important;
+  padding-right:18px!important;
+}
+@media(max-width:460px){
+  .ghand{
+    padding-left:32vw!important;
+    padding-right:16px!important;
+  }
+}
+
+
+/* ===== fan UX v8 edge-scroll fix ===== */
+/* Достаточный запас справа/слева, чтобы крайние карты могли доехать до active-anchor */
+.ghand{
+  padding-left:34vw!important;
+  padding-right:66vw!important;
+  scroll-padding-left:34vw!important;
+  scroll-padding-right:66vw!important;
+}
+@media(max-width:460px){
+  .ghand{
+    padding-left:32vw!important;
+    padding-right:68vw!important;
+    scroll-padding-left:32vw!important;
+    scroll-padding-right:68vw!important;
+  }
+}
+
+
+/* ===== fan UX v9 centered carousel ===== */
+.ghand{
+  padding-left:50vw!important;
+  padding-right:50vw!important;
+  scroll-padding-left:50vw!important;
+  scroll-padding-right:50vw!important;
+}
+@media(max-width:460px){
+  .ghand{
+    padding-left:50vw!important;
+    padding-right:50vw!important;
+    scroll-padding-left:50vw!important;
+    scroll-padding-right:50vw!important;
+  }
+}
+
+
+/* ===== fan UX v10 true centered carousel ===== */
+.ghand{
+  /* Центр первой/последней карты может точно совпасть с центром контейнера */
+  padding-left:calc(50% - 92px)!important;
+  padding-right:calc(50% - 92px)!important;
+  scroll-padding-left:calc(50% - 92px)!important;
+  scroll-padding-right:calc(50% - 92px)!important;
+}
+@media(max-width:460px){
+  .ghand{
+    padding-left:calc(50% - 88px)!important;
+    padding-right:calc(50% - 88px)!important;
+    scroll-padding-left:calc(50% - 88px)!important;
+    scroll-padding-right:calc(50% - 88px)!important;
+  }
+}
+
+
+
+/* ===== bonus UX v3: all visible, best restored ===== */
+.gbonus .bchip{
+  opacity:1!important;
+  filter:none!important;
+}
+.gbonus .bchip.fit{
+  border-color:#587c42;
+}
+.gbonus .bchip.best{
+  border-color:var(--acc)!important;
+  box-shadow:0 0 0 1px var(--acc) inset,0 6px 18px rgba(0,0,0,.22)!important;
+}
+.gbonus .bchip.best u{
+  display:inline-block;
+  margin:0 0 5px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:var(--acc);
+  color:#17120d;
+  font-size:8px;
+  font-weight:900;
+  text-transform:uppercase;
+  text-decoration:none;
+  letter-spacing:.05em;
+}
+
+
+/* ===== battle board v2: opponent stack + two play slots ===== */
+.gopp{margin-bottom:8px!important}
+.goppbar{display:flex!important;flex-direction:column;gap:7px!important;min-height:auto!important}
+.opstack{position:relative;width:72px;height:58px;margin:0 auto}
+.opstack .gback{position:absolute;width:42px;height:58px;left:15px;top:0}
+.opstack .gback:nth-child(1){transform:translate(-8px,4px) rotate(-5deg);opacity:.62}
+.opstack .gback:nth-child(2){transform:translate(-4px,2px) rotate(-2deg);opacity:.8}
+.opstack .gback:nth-child(3){transform:none;opacity:1}
+.opstack .stackcount{position:absolute;right:-7px;bottom:-5px;z-index:5;min-width:25px;height:25px;padding:0 6px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-size:11px;font-weight:900}
+.playboard{display:grid;grid-template-columns:1fr 58px 1fr;gap:8px;align-items:center;margin:8px 0 10px;padding:10px;border:1px solid var(--line);border-radius:15px;background:rgba(0,0,0,.18)}
+.playslot{position:relative;min-height:154px;border:1px dashed #625649;border-radius:13px;display:flex;align-items:center;justify-content:center;padding:7px;background:rgba(255,255,255,.018);overflow:hidden}
+.playslot .slotlabel{position:absolute;left:7px;top:6px;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);z-index:4}
+.playslot.me .slotlabel{color:var(--acc2)}
+.playslot .slotempty{font-size:10px;color:var(--muted);text-align:center;line-height:1.35}
+.slotback{width:82px;height:118px;border-radius:11px;border:1px solid #5b4937;background:repeating-linear-gradient(135deg,#2e2219 0 8px,#3a2b1c 8px 16px);box-shadow:0 8px 20px rgba(0,0,0,.35);animation:slotDrop .2s ease-out}
+.slotopen{width:100%;animation:slotFlip .90s ease-out}
+.slotopen .pcard{min-height:136px!important}
+.slotopen .pcard .pface{height:36px!important;font-size:22px!important}
+.slotopen .pcard .pname{font-size:10px!important}
+.slotopen .pcard .pstat{font-size:7.5px!important;padding:3px 4px!important}
+.slotopen .pcard .pstat b{font-size:10px!important}
+.slotresult{position:absolute;right:6px;top:6px;z-index:8;padding:3px 6px;border-radius:999px;font-size:8px;font-weight:900;text-transform:uppercase}
+.slotresult.win{background:#355a2d;color:#e3f7d8}.slotresult.lose{background:#63352e;color:#ffd9d3}.slotresult.draw{background:#495057;color:#eef1f3}
+.boardmid{text-align:center}.boardmid .roundstat{margin:0 auto;min-width:54px!important;padding:6px!important}.boardmid .versus{font-size:9px;color:var(--muted);margin-top:5px}
+.revealnote{text-align:center;font-size:11px;font-weight:800;margin:2px 0 8px}.revealnote.win{color:var(--acc2)}.revealnote.lose{color:#e8544a}.revealnote.draw{color:var(--muted)}
+@keyframes slotDrop{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}@keyframes slotFlip{0%{transform:rotateY(90deg);opacity:.2}100%{transform:rotateY(0);opacity:1}}
+@media(max-width:460px){.playboard{grid-template-columns:1fr 50px 1fr;gap:6px;padding:8px}.playslot{min-height:146px;padding:6px}.slotback{width:75px;height:108px}}
+
+
+/* ===== bonus match v5: one card per type ===== */
+.gbonus .bchip.used{
+  opacity:.40;
+  filter:saturate(.45);
+}
+.gbonus .bchip.used::after{
+  content:"использовано";
+  display:block;
+  margin-top:5px;
+  font-size:8px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+}
+
+
+/* ===== comparison hold v2 ===== */
+.chosenstatnote{
+  width:max-content;
+  max-width:100%;
+  margin:7px auto 10px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:rgba(255,255,255,.025);
+  text-align:center;
+}
+.chosenstatnote span{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:2px;
+}
+.chosenstatnote b{
+  color:var(--ink);
+  font-size:12px;
+}
+.revealnext{
+  max-width:220px;
+  margin:8px auto 10px!important;
+}
+
+
+/* ===== six profiles + comparison statistics ===== */
+.tabbar .tab{min-width:0;padding-left:3px;padding-right:3px}
+.tabbar .tab span{font-size:9px}
+.ptrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.statcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.statcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:left}
+.statcard.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.sct{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sct b{font-size:15px}.sct span{font-size:9px;color:var(--muted)}
+.scgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.scgrid span{font-size:8px;color:var(--muted)}
+.scgrid b{display:block;font-size:12px;color:var(--ink);margin-top:2px}
+.stat-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px -4px 0}
+.statcmp{min-width:2750px;font-size:11px}
+.statcmp th{position:sticky;top:0;background:var(--panel);z-index:2;white-space:nowrap}
+.statcmp td{white-space:nowrap;padding:6px 7px}
+.statcmp th:first-child,.statcmp td:first-child{position:sticky;left:0;background:var(--panel);z-index:3}
+.statcmp .ordercell{min-width:300px;text-align:left}
+.tablepick{padding:4px 7px;border-radius:7px;font-weight:800}
+@media(max-width:460px){
+  .statcards{grid-template-columns:1fr}
+  .tabbar .tab i{font-size:15px}
+  .tabbar .tab span{font-size:8px}
+}
+
+
+/* ===== statistics v2: vertical parameters ===== */
+.statcards,.statcard,.sct,.scgrid{display:none!important}
+.stat-vertical-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.stat-vertical{
+  width:100%;
+  min-width:760px;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:11px;
+}
+.stat-vertical thead th{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:var(--panel);
+  padding:8px 7px;
+  white-space:nowrap;
+}
+.stat-vertical thead th:first-child{
+  left:0;
+  z-index:6;
+  min-width:210px;
+  text-align:left;
+}
+.stat-vertical tbody th{
+  position:sticky;
+  left:0;
+  z-index:3;
+  min-width:210px;
+  max-width:210px;
+  background:var(--panel);
+  color:var(--muted);
+  font-weight:600;
+  text-align:left;
+  padding:8px 9px;
+  border-top:1px solid var(--line);
+}
+.stat-vertical td{
+  min-width:88px;
+  text-align:center;
+  padding:8px 7px;
+  border-top:1px solid var(--line);
+  white-space:normal;
+  vertical-align:middle;
+}
+.stat-vertical td.on,
+.stat-vertical thead th.on{
+  background:rgba(232,137,43,.08);
+}
+.stat-vertical .tablepick{
+  min-width:48px;
+  padding:5px 8px;
+}
+@media(max-width:460px){
+  .stat-vertical{min-width:720px;font-size:10px}
+  .stat-vertical thead th:first-child,
+  .stat-vertical tbody th{
+    min-width:180px;
+    max-width:180px;
+  }
+  .stat-vertical td{min-width:82px;padding:7px 5px}
+}
+
 </style>
 </head>
 <body>
@@ -884,7 +1292,7 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
 <div id="match" class="gamewrap" style="display:none"></div>
 <div class="app">
   <div class="appbar">
-    <div class="abtitle">Лесная лига <span style="font-size:10px;color:var(--muted);font-weight:600">final mobile · optimized</span></div>
+    <div class="abtitle">Лесная лига <span style="font-size:10px;color:var(--muted);font-weight:600">final mobile · 6-profile vertical stats v17</span></div>
     <div class="abstats">
       <span class="ab">День <b id="ab_day">1</b></span>
       <span class="ab">Карт <b id="ab_cards">0</b></span>
@@ -914,6 +1322,9 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
     <section class="screen" data-s="shop">
       <div class="panel" id="shop"></div>
     </section>
+    <section class="screen" data-s="statsall">
+      <div class="panel" id="comparestats"></div>
+    </section>
     <section class="screen" data-s="more">
       <div class="panel">
         <h3>Прогон времени</h3>
@@ -941,6 +1352,7 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
     <button class="tab" data-t="coll" onclick="showTab('coll')"><i>🎴</i><span>Коллекция</span></button>
     <button class="tab" data-t="deck" onclick="showTab('deck')"><i>⚔️</i><span>Колода</span></button>
     <button class="tab" data-t="shop" onclick="showTab('shop')"><i>🛒</i><span>Магазин</span></button>
+    <button class="tab" data-t="statsall" onclick="showTab('statsall')"><i>📊</i><span>Статистика</span></button>
     <button class="tab" data-t="more" onclick="showTab('more')"><i>⚙️</i><span>Ещё</span></button>
   </nav>
 </div>
@@ -999,7 +1411,7 @@ const CFG = {
   statShort: ['СИЛ','ЛОВ','ИНТ','СМЕ'],
   emoji: ['🦔','🐿️','🐇','🦦','🦡','🦫','🐆','🦉','🦌','🐺','🐻','🦊'],
   sigStat: [3,1,1,1,0,2,1,2,0,3,0,2],
-  rageMult: 1.6,             // Ярость: множитель, действует только на обычную карту
+  rageMult: 1.6,             // Ярость: множитель выбранной характеристики карты любой редкости
   shape: { C:[0.40,0.28,0.18,0.14], R:[0.36,0.27,0.20,0.17], L:[0.30,0.26,0.23,0.21] },
   sums:  { C:400, R:650, L:950, L1:1100 },
   waveCaps: [24,40,54,67,79,90,100,108,115,120],
@@ -1159,7 +1571,7 @@ const BONUS = [];
   add(['Щит'],'shield',0,'R','Проигранная карта не переходит сопернику');
   add(['Отмена'],'cancel',0,'R','Отменяет бонус-карту соперника в этом раунде');
   add(['Подмена'],'swap',0,'L','Сравнение идёт по сильнейшей характеристике твоей карты');
-  add(['Ярость'],'rage',0,'L','×1,6 к характеристике обычной карты');
+  add(['Ярость'],'rage',0,'L','×1,6 к сравниваемой характеристике своей карты');
 })();
 
 /* ================= ГЕНЕРАЦИЯ КАРТ ================= */
@@ -1412,8 +1824,8 @@ function newState(){
   };
 }
 /* ================= ВАРИАНТЫ (ПРОФИЛИ) =================
-   Два профиля выдачи × два набора порогов новизны = 4 коллекции.
-   Все они живут параллельно: день, задания и паки применяются одновременно
+   Три профиля × два набора порогов новизны = 6 коллекций.
+   Все шесть вариантов живут параллельно: день, задания и паки применяются одновременно
    ко всем, поэтому их можно честно сравнивать между собой.               */
 const LADDER_COMMON=[{count:1,share:0.40},{count:5,share:0.25},{count:99,share:0.35}];
 const NOVELTY_A={noveltyStart:0.97, novelty30:0.76, novelty60:0.56, novelty85:0.32};
@@ -1426,11 +1838,13 @@ const NOV_TITLE={ A:'Вариант А — больше уникальных к�
 const NOV_NUM={ A:'0,97 / 0,76 / 0,56 / 0,32', B:'0,85 / 0,65 / 0,45 / 0,25' };
 const PROFILE_DESC={
   1:'Каждая 3-я карта распределяется случайно по всей коллекции — карты падают отовсюду, включая дальние колоды.',
-  2:'Каждая 3-я карта заполняет самую пустую колоду — отстающие колоды подтягиваются автоматически, ничего не застревает.'
+  2:'Каждая 3-я карта заполняет самую пустую колоду — отстающие колоды подтягиваются автоматически, ничего не застревает.',
+  3:'Выдача полностью повторяет профиль 2, но PvP доступен только при наличии минимум 10 карт в текущей боевой колоде.'
 };
 const MECH={
   1:'Каждая 3-я карта случайная равномерно по всей коллекции',
-  2:'Каждая 3-я карта компенсирует самую пустую колоду'
+  2:'Каждая 3-я карта компенсирует самую пустую колоду',
+  3:'Как профиль 2 + PvP только от 10 карт БК'
 };
 const NOV_SHORT={ A:'больше уникальных карт', B:'больше дублей' };
 const VARIANTS=[
@@ -1438,10 +1852,13 @@ const VARIANTS=[
   {id:'1B', prof:1, nov:'B', name:MECH[1], sub:NOV_SHORT.B},
   {id:'2A', prof:2, nov:'A', name:MECH[2], sub:NOV_SHORT.A},
   {id:'2B', prof:2, nov:'B', name:MECH[2], sub:NOV_SHORT.B},
+  {id:'3A', prof:3, nov:'A', name:MECH[3], sub:NOV_SHORT.A},
+  {id:'3B', prof:3, nov:'B', name:MECH[3], sub:NOV_SHORT.B},
 ];
 const PROFILE_NAME={
   1:'Колоды заполняются — каждая 3-я карта распределяется случайно по всей коллекции',
-  2:'Колоды заполняются — пустые колоды заполняются автоматически: каждая 3-я карта заполняет самые пустые колоды'
+  2:'Колоды заполняются — пустые колоды заполняются автоматически: каждая 3-я карта заполняет самые пустые колоды',
+  3:'Та же компенсация пустых колод, что у профиля 2, но с защитным порогом PvP: БК ≥ 10'
 };
 function variantTune(v){
   const nov = v.nov==='A'?NOVELTY_A:NOVELTY_B;
@@ -1449,7 +1866,7 @@ function variantTune(v){
     ladderSteps: JSON.parse(JSON.stringify(LADDER_COMMON)),
     decay: 0.75,
     randomEveryN: v.prof===1 ? 3 : 0,     // профиль 1: случайная раскладка
-    fillEveryN:   v.prof===2 ? 3 : 0,     // профиль 2: заполнение самой пустой
+    fillEveryN:   (v.prof===2||v.prof===3) ? 3 : 0, // профили 2/3: заполнение самой пустой
     fillMinGap: 0,
     firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 3,   // первая быстрее, вторая — с прежней интенсивностью
     finishLe2:1.0, finishLe4:1.0,
@@ -1867,7 +2284,7 @@ function useSlot(i){
 function storeSlot(i){ SLOTS[i].S=S; SLOTS[i].tune=JSON.parse(JSON.stringify(TUNE)); }
 function initSlots(){
   SLOTS=VARIANTS.map(v=>({v, tune:variantTune(v), S:null}));
-  // Каждый профиль моделирует отдельного игрока, поэтому у 1A / 1B / 2A / 2B
+  // Каждый вариант моделирует отдельного игрока, поэтому у 1A / 1B / 2A / 2B / 3A / 3B
   // своя независимая случайная последовательность первых шести колод.
   // Последние шесть колод фиксированы для всех: Сова → Олень → Волк → Бобр → Медведь → Лис.
   SLOTS.forEach(sl=>{ S=newState(); sl.S=S; });
@@ -1933,8 +2350,8 @@ function nextDayAll(autoActive){
     useSlot(i);
     if(S.seasonOver) return;
     const isActive = (i===cur);
-    // ГЛОБАЛЬНЫЕ настройки поведения одинаковы для всех четырёх профилей.
-    // Если пользователь выключил PvP / задания / QR / друзей, это выключается в 1A, 1B, 2A и 2B.
+    // ГЛОБАЛЬНЫЕ настройки поведения одинаковы для всех шести вариантов.
+    // Если пользователь выключил PvP / задания / QR / друзей, это выключается во всех 6 вариантах.
     CAPTURE = isActive && MODE==='play';
     nextDay();
     const doTasks  = AUTO.tasks;
@@ -1950,7 +2367,7 @@ function nextDayAll(autoActive){
       S.qrToday++; S.qrUsed++; S.today.qrUsed++; addBonus(CFG.qr.bonusPerCode);
     }
     if(doFriend && S.friends<30 && S.day%3===0) inviteFriend();   // примерно один друг раз в три дня
-    for(let m=0;m<matches;m++){ if(bkList().length>=3) autoMatch(); }
+    for(let m=0;m<matches;m++){ if(pvpGateOk() && bkList().length>=3) autoMatch(); }
     CAPTURE=false;
     storeSlot(i);
   });
@@ -1966,7 +2383,16 @@ function resetAll(){ if(confirm('Начать заново все профили
 function botCollection(myUniq,mm,myBkSize,handSize){
   const myBk=bkList();
   const locked=safeLocked();
-  const pool=CARDS.filter(c=>!locked.includes(c.id));
+  // До 3-го дня PvP не может случайно закрыть первую собираемую колоду раньше
+  // целевого коридора 3–8 дней. Блокируем одну из ещё не открытых карт этой колоды
+  // именно в пуле соперника; остальные карты и обычные шансы не меняются.
+  let earlyGate=null;
+  if(S.day<3){
+    const firstDeck=(S.deckOrder||[])[0];
+    const miss=CARDS.filter(c=>c.deck===firstDeck && !S.opened[c.id]);
+    if(miss.length) earlyGate=miss[miss.length-1].id;
+  }
+  const pool=CARDS.filter(c=>!locked.includes(c.id) && c.id!==earlyGate);
   const targetSize=Math.max(3,Math.min(CFG.bkSize,myBkSize,pool.length));
   const mine={C:0,R:0,L:0}; myBk.forEach(c=>mine[c.rar]++);
   const byR={C:pool.filter(c=>c.rar==='C'),R:pool.filter(c=>c.rar==='R'),L:pool.filter(c=>c.rar==='L')};
@@ -1984,19 +2410,68 @@ function botCollection(myUniq,mm,myBkSize,handSize){
   }
   return (best||pool.slice(0,targetSize)).map(c=>c.id);
 }
+function profilePvpMin(){
+  return SLOTS[ACTIVE] && SLOTS[ACTIVE].v.prof===3 ? 10 : 0;
+}
+function pvpGateOk(){
+  const min=profilePvpMin();
+  return !min || bkList().length>=min;
+}
 function availableModes(){
   const u=uniq();
+  if(!pvpGateOk()) return [];
   return Object.entries(CFG.modes).filter(([k,m])=>u>=m.access).map(([k])=>k);
 }
-// Рука на матч: случайные N карт из боевой колоды, без ограничений по редкости.
+// Рука на матч: случайные N карт из боевой колоды с контролем редкостей.
+// Legendary — не более 60% руки, Rare — не более 80%, если есть карты других редкостей.
+// Если альтернатив физически не хватает, лимит автоматически ослабляется.
 function drawHand(ids,m){
-  const pool=[...ids];
-  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  return pool.slice(0,m.cards);
+  const n=Math.min(m.cards,ids.length);
+  const pool=shuffle([...ids]);
+
+  const countPool=r=>pool.filter(id=>CARDS[id].rar===r).length;
+  const lTotal=countPool('L'), rTotal=countPool('R');
+  const nonL=pool.length-lTotal, nonR=pool.length-rTotal;
+
+  const nominalL=Math.floor(n*0.60);
+  const nominalR=Math.floor(n*0.80);
+
+  // Минимум карт этой редкости, который неизбежен из-за нехватки альтернатив.
+  const forcedL=Math.max(0,n-nonL);
+  const forcedR=Math.max(0,n-nonR);
+
+  const maxL=Math.max(nominalL,forcedL);
+  const maxR=Math.max(nominalR,forcedR);
+
+  const hand=[], deferred=[];
+  let l=0,r=0;
+
+  for(const id of pool){
+    if(hand.length>=n) break;
+    const rar=CARDS[id].rar;
+    if(rar==='L' && l>=maxL){ deferred.push(id); continue; }
+    if(rar==='R' && r>=maxR){ deferred.push(id); continue; }
+
+    hand.push(id);
+    if(rar==='L') l++;
+    if(rar==='R') r++;
+  }
+
+  // Страховка: если из-за состава пула руку не удалось заполнить,
+  // добираем отложенные карты независимо от лимита.
+  for(const id of deferred){
+    if(hand.length>=n) break;
+    hand.push(id);
+  }
+  return hand;
 }
 function startMatch(modeKey){
   const m=CFG.modes[modeKey];
   const bk=bkList();
+  const pvpMin=profilePvpMin();
+  if(pvpMin && bk.length<pvpMin){
+    log(`Профиль 3: PvP доступен только при БК от ${pvpMin} карт`,'warn'); render(); return;
+  }
   if(bk.length<m.cards){ log(`Для режима ${m.name} нужно минимум ${m.cards} карт в боевой колоде`,'warn'); render(); return; }
   const myHand=drawHand(bk.map(c=>c.id), m);
   const botBk=botCollection(uniq(),m.mm,bk.length,m.cards);
@@ -2004,11 +2479,13 @@ function startMatch(modeKey){
   const first=Math.random()<0.5?'me':'bot';
   M={mode:modeKey,m,myHand,botHand,myWins:0,botWins:0,roundDraws:0,round:1,
      scheduledNamer:first,namer:first,phase:'',pendingStat:null,botCard:null,
-     myBonus:null,botBonus:null,myCard:null,myStat:null,lostCards:0,logs:[]};
+     myBonus:null,botBonus:null,myCard:null,myStat:null,bonusDecision:'pending',boardReveal:null,
+     myBonusTypes:[],usedBonusTypes:[],botUsedBonusTypes:[],lostCards:0,logs:[]};
   // ── Бонус-карты: в матче доступен ВЕСЬ запас игрока. Играется не более одной в раунде,
   //    выбрать можно любую; игра лишь подсказывает, какая сейчас полезнее.
   //    Соперник — зеркало: запас того же размера ±8%, карты тянутся по редкости 70/25/5.
   const myStock = Object.values(S.bonus||{}).reduce((a,b)=>a+(b||0),0);
+  M.myBonusTypes = Object.entries(S.bonus||{}).filter(([,n])=>n>0).map(([i])=>+i);
   M.botStock = Math.max(0, Math.round(myStock*(0.92+Math.random()*0.16)));
   M.botBonusInv={};
   for(let z=0;z<M.botStock;z++){ const bi=rollBonusIndex(); M.botBonusInv[bi]=(M.botBonusInv[bi]||0)+1; }
@@ -2024,21 +2501,33 @@ function setupTurn(){
   } else M.phase='name';
   startTurnTimer();
 }
+function advanceBoardReveal(){
+  if(!M || M.phase!=='boardReveal') return;
+  if(M.revealTimer){ clearTimeout(M.revealTimer); M.revealTimer=null; }
+  M.boardReveal=null;
+  if(M.round>M.m.cards || !M.myHand.length || !M.botHand.length) finishMatch();
+  else prepRound();
+  render();
+}
 function prepRound(){
-  M.myBonus=null; M.botBonus=null; M.myCard=null; M.myStat=null; M.botCard=null; M.pendingStat=null;
+  M.myBonus=null; M.botBonus=null; M.myCard=null; M.myStat=null; M.bonusDecision='pending'; M.botCard=null; M.pendingStat=null;
   M.namer=M.scheduledNamer;
   if(!M.botHand.length||!M.myHand.length){ finishMatch(); return; }
   M.botBonusPicked=null;
   setupTurn();
 }
-// В матче доступен ВЕСЬ запас бонус-карт игрока.
+// В бою показывается по одной карточке каждого типа бонуса, который был у игрока на старте матча.
+// Количество экземпляров ×N остаётся только в разделе «Бонус-карты» вне боя.
 function bonusOwnedList(){
-  if(!S||!S.bonus) return [];
-  return Object.entries(S.bonus).filter(([,n])=>n>0).map(([i,n])=>({i:+i,n,...BONUS[+i]}));
+  if(!M) return [];
+  return (M.myBonusTypes||[]).map(i=>({i,n:1,...BONUS[i]}));
 }
 function turnBonusOwnedList(){ return bonusOwnedList(); }
 function botBonusList(){
-  return Object.entries(M&&M.botBonusInv?M.botBonusInv:{}).filter(([,n])=>n>0).map(([i,n])=>({i:+i,n,...BONUS[+i]}));
+  const used=new Set((M&&M.botUsedBonusTypes)||[]);
+  return Object.entries(M&&M.botBonusInv?M.botBonusInv:{})
+    .filter(([i,n])=>n>0 && !used.has(+i))
+    .map(([i,n])=>({i:+i,n:1,...BONUS[+i]}));
 }
 function consumeBotBonus(i){
   if(i===null||i===undefined||!M.botBonusInv||!M.botBonusInv[i]) return;
@@ -2063,7 +2552,7 @@ function bonusScore(b, statIdx, cardId){
     if(statIdx===null||statIdx<0) return b.val/4;      // характеристика ещё не названа
     return b.stat===statIdx ? b.val : 0;
   }
-  if(b.type==='rage') return card&&card.rar==='C' ? Math.round(v*(CFG.rageMult-1)) : 0;
+  if(b.type==='rage') return Math.round(v*(CFG.rageMult-1));
   if(b.type==='swap') return card ? Math.max(...card.st)-v : 25;
   if(b.type==='shield') return 30;
   if(b.type==='cancel') return 12;
@@ -2104,17 +2593,26 @@ function rollBonusIndex(){
   if(!pool.length) pool=BONUS.map((b,i)=>({b,i}));
   return pool[Math.floor(Math.random()*pool.length)].i;
 }
-function chooseMyBonus(i){ M.myBonus=(M.myBonus===i?null:i); render(); }
+function chooseMyBonus(i){
+  if(!M) return;
+  if((M.usedBonusTypes||[]).includes(i)) return;
+  // Любую ещё не использованную бонус-карту можно сыграть.
+  // Подсветка — только рекомендация; неподходящая карта тоже разрешена.
+  M.myBonus=i; M.bonusDecision='bonus'; render();
+}
+function skipMyBonus(){ if(!M) return; M.myBonus=null; M.bonusDecision='skip'; render(); }
 function selectMove(cardId,statIdx){
   if(!M||!['name','respond'].includes(M.phase)) return;
   M.myCard=cardId;
   M.myStat=M.namer==='me'?statIdx:M.pendingStat;
-  // При смене карты/характеристики сбрасываем бонус: список релевантных карт пересчитается.
-  M.myBonus=null;
+  // При смене карты/характеристики решение по бонусу принимается заново.
+  M.myBonus=null; M.bonusDecision='pending';
   render();
 }
 function confirmMove(){
   if(!M||M.myCard===null||M.myCard===undefined||M.myStat===null||M.myStat===undefined) return;
+  const stock=bonusRanked(M.myStat,M.myCard);
+  if(stock.length && M.bonusDecision==='pending') return;
   playRound(M.myCard,M.namer==='me'?M.myStat:-1);
 }
 // Игрок посмотрел на вскрытые карты и решил, применять ли бонус-карту
@@ -2189,7 +2687,8 @@ function playRound(cardId,stat){
     M.phase='reveal'; M.myBonus=null;
     render(); startTurnTimer(); return;
   }
-  // применение бонус-карт: Отмена → Подмена → Ярость → числовые → Щит.
+  // применение бонус-карт: Отмена → Подмена → одновременно множители и ± → Щит.
+  // ВАЖНО: итог не зависит от порядка обработки игроков.
   let myV=CARDS[myCard].st[statIdx], botV=CARDS[botCard].st[statIdx];
   if(M.myBonusLocked) M.myBonus=null;
   if(M.botBonusLocked) M.botBonusPicked=null;
@@ -2204,29 +2703,40 @@ function playRound(cardId,stat){
   // Если обе стороны сыграли Подмену, они взаимно гасятся и остаётся исходная характеристика.
   const mySwap=myEff&&myEff.type==='swap', botSwap=botEff&&botEff.type==='swap';
   if(mySwap!==botSwap){
-    const owner=mySwap?'me':'bot'; const cid=mySwap?myCard:botCard;
+    const cid=mySwap?myCard:botCard;
     statIdx=CARDS[cid].st.indexOf(Math.max(...CARDS[cid].st));
-    myV=CARDS[myCard].st[statIdx]; botV=CARDS[botCard].st[statIdx];
   }
-  const applyNumeric=(b,who)=>{
+
+  const baseMy=CARDS[myCard].st[statIdx], baseBot=CARDS[botCard].st[statIdx];
+  let myMul=1, botMul=1, myAdd=0, botAdd=0;
+  const collectEffect=(b,who)=>{
     if(!b||['cancel','swap'].includes(b.type)) return;
-    if(b.type==='up'){ if(who==='me') myV+=b.val; else botV+=b.val; }
-    else if(b.type==='down'){ if(who==='me') botV-=b.val; else myV-=b.val; }
-    else if(b.type==='upStat'&&b.stat===statIdx){ if(who==='me') myV+=b.val; else botV+=b.val; }
-    else if(b.type==='downStat'&&b.stat===statIdx){ if(who==='me') botV-=b.val; else myV-=b.val; }
+    if(b.type==='up'){ if(who==='me') myAdd+=b.val; else botAdd+=b.val; }
+    else if(b.type==='down'){ if(who==='me') botAdd-=b.val; else myAdd-=b.val; }
+    else if(b.type==='upStat'&&b.stat===statIdx){ if(who==='me') myAdd+=b.val; else botAdd+=b.val; }
+    else if(b.type==='downStat'&&b.stat===statIdx){ if(who==='me') botAdd-=b.val; else myAdd-=b.val; }
     else if(b.type==='rage'){
-      const c=CARDS[who==='me'?myCard:botCard];
-      if(c.rar==='C'){ if(who==='me') myV=Math.round(myV*CFG.rageMult); else botV=Math.round(botV*CFG.rageMult); }
+      if(who==='me') myMul=CFG.rageMult;
+      else botMul=CFG.rageMult;
     }
     else if(b.type==='shield'){ if(who==='me') myShield=true; else botShield=true; }
   };
-  applyNumeric(myEff,'me'); applyNumeric(botEff,'bot');
-  if(myB2){ S.bonus[M.myBonus]=Math.max(0,(S.bonus[M.myBonus]||0)-1);
+  collectEffect(myEff,'me'); collectEffect(botEff,'bot');
+  myV=Math.max(0,Math.round(baseMy*myMul)+myAdd);
+  botV=Math.max(0,Math.round(baseBot*botMul)+botAdd);
+  if(myB2){
+    M.usedBonusTypes=M.usedBonusTypes||[];
+    if(!M.usedBonusTypes.includes(M.myBonus)) M.usedBonusTypes.push(M.myBonus);
+    S.bonus[M.myBonus]=Math.max(0,(S.bonus[M.myBonus]||0)-1);
     if(S.bonus[M.myBonus]===0) delete S.bonus[M.myBonus];
     S.stat.bonusUsed++; S.today.bonusUsed++; S.week.bonusUsed++;
     if(myB2 && (myB2.type==='down'||myB2.type==='downStat')){ S.stat.debuffUsed++; S.today.debuffUsed++; }
     if(myB2&&myB2.rar==='L'){ S.stat.legBonusUsed++; S.today.legBonusUsed++; } }
-  if(botB) consumeBotBonus(M.botBonusPicked);
+  if(botB){
+    M.botUsedBonusTypes=M.botUsedBonusTypes||[];
+    if(!M.botUsedBonusTypes.includes(M.botBonusPicked)) M.botUsedBonusTypes.push(M.botBonusPicked);
+    consumeBotBonus(M.botBonusPicked);
+  }
   // исход
   let res;
   if(myV>botV) res='win'; else if(botV>myV) res='lose'; else res='draw';
@@ -2265,7 +2775,15 @@ function playRound(cardId,stat){
                 myBonusName: myB2?myB2.name:null, botBonusName: botB?botB.name:null,
                 myBonusIdx: myB2?M.myBonus:null, botBonusIdx: botB?M.botBonusPicked:null };
   M.round++; M.scheduledNamer = M.scheduledNamer==='me'?'bot':'me';
-  if(M.round>M.m.cards||!M.myHand.length||!M.botHand.length) finishMatch();   // играем все раунды режима
+  if(!NORENDER){
+    stopTurnTimer();
+    M.boardReveal={...M.lastRound,statChooser:M.namer};
+    M.phase='boardReveal';
+    render();
+    M.revealTimer=setTimeout(advanceBoardReveal,20000);
+    return;
+  }
+  if(M.round>M.m.cards||!M.myHand.length||!M.botHand.length) finishMatch();
   else prepRound();
   render();
 }
@@ -2340,7 +2858,7 @@ function renderProfiles(){
     let cl=0; for(let d=0;d<12;d++){ const ids=CARDS.filter(c=>c.deck===d).map(c=>c.id); if(ids.every(x=>st.opened[x])) cl++; }
     return {u,cl}; };
   let t='<div class="ptrow">';
-  [1,2].forEach(p=>{
+  [1,2,3].forEach(p=>{
     const on = cur.v.prof===p;
     const idx = SLOTS.findIndex(sl=>sl.v.prof===p && sl.v.nov===cur.v.nov);
     t+=`<button class="ptab ${on?'on':''}" onclick="switchTo(${idx})">
@@ -2360,10 +2878,10 @@ function renderProfiles(){
   h+=`<div class="pdesc"><b>Профиль ${cur.v.prof} — ${MECH[cur.v.prof]}.</b><br>
       ${PROFILE_DESC[cur.v.prof]}<br>
       <b>${NOV_TITLE[cur.v.nov]}</b> (пороги новизны ${NOV_NUM[cur.v.nov]}): ${NOV_DESC[cur.v.nov]}<br>
-      <span style="color:var(--muted)">День проживается одновременно во всех четырёх коллекциях. У каждого профиля своя случайная очередь первых шести колод; последние шесть фиксированы. Задания и общие правила одинаковые.</span></div>`;
+      <span style="color:var(--muted)">День проживается одновременно во всех шести коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Профиль 3 отличается от профиля 2 только порогом PvP: БК не меньше 10 карт.</span></div>`;
   // тумблеры автопрогона
   h+=`<div class="autorow">
-    <span class="muted">Что делают все 4 профиля каждый день:</span>
+    <span class="muted">Что делают все 6 вариантов каждый день:</span>
     <button class="tgl ${AUTO.tasks?'on':''}" onclick="toggleAuto('tasks')">Выполнять задания: ${AUTO.tasks?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.qr?'on':''}" onclick="toggleAuto('qr')">Сканировать 1 QR в день: ${AUTO.qr?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.pvp?'on':''}" onclick="toggleAuto('pvp')">Играть PvP: ${AUTO.pvp?'ДА ('+MATCHES_PER_DAY+' матча)':'НЕТ'}</button>
@@ -2376,13 +2894,13 @@ function renderProfiles(){
     <input class="tnum" type="text" inputmode="numeric" value="${MATCHES_PER_DAY}" style="width:48px"
            onchange="setMatches(this.value)">
   </div>
-  <div class="muted" style="font-size:12px;margin-top:4px"><b>Режим игры</b> — активный вариант вы ведёте руками, три остальных живут на автоигроке. <b>Режим сравнения</b> — все четыре варианта проходят день автоматически с одинаковыми настройками, это честное сравнение правил выдачи.<br>
-  Настройки поведения глобальные и действуют сразу на 1A, 1B, 2A и 2B. Выключили PvP — ни один профиль не играет; то же самое для заданий, QR и друзей.</div>`;
-  // Полная сравнительная сводка по всем 4 пользователям.
+  <div class="muted" style="font-size:12px;margin-top:4px"><b>Режим игры</b> — активный вариант вы ведёте руками, пять остальных живут на автоигроке. <b>Режим сравнения</b> — все шесть вариантов проходят день автоматически с одинаковыми настройками, это честное сравнение правил выдачи.<br>
+  Настройки поведения глобальные и действуют сразу на 1A, 1B, 2A, 2B, 3A и 3B. Выключили PvP — ни один профиль не играет; то же самое для заданий, QR и друзей.</div>`;
+  // Полная сравнительная сводка по всем 6 пользователям.
   // «Физ. карт» = сумма всех экземпляров на руках, включая дубли.
   // «БК» = сколько уникальных физических карт сейчас реально доступно для боя
   // с учётом блокировок и лимита боевой колоды 50 карт.
-  h+=`<h3 style="margin-top:16px">Все пользователи <span class="tag">текущее состояние</span></h3>
+  h+=`<h3 style="margin-top:16px">Все 6 вариантов <span class="tag">текущее состояние</span></h3>
       <div class="muted" style="margin-bottom:6px">Физ. карт — все экземпляры на руках, включая дубли. БК — карты, доступные для PvP прямо сейчас.</div>
       <div class="usercards">`;
   SLOTS.forEach((sl,i)=>{
@@ -2684,7 +3202,7 @@ function render(){
   if(bn){ bn.textContent = S.day===0?'Начать сезон':(S.seasonOver?'Сезон завершён':'Прожить день (авто)');
           bn.disabled=S.seasonOver; }
   if(M){ renderMatch(); $('match').style.display='block'; } else { $('match').style.display='none'; }
-  paintAppbar(); renderHero(); renderHomeColl(); renderPvp(); renderLastMatch(); renderTasks(); renderHomeDeck(); renderHomeBonus(); renderCollection(); renderShop(); renderBk(); renderBonuses(); renderStats(); renderRules(); renderLog();
+  paintAppbar(); renderHero(); renderHomeColl(); renderPvp(); renderLastMatch(); renderTasks(); renderHomeDeck(); renderHomeBonus(); renderCollection(); renderShop(); renderBk(); renderBonuses(); renderCompareStats(); renderStats(); renderRules(); renderLog();
 }
 function renderBk(){
   const bk=bkList();
@@ -2764,14 +3282,15 @@ function renderPvp(){
   const icon={exp:'🌿',cls:'🍂',pro:'🔥'};
   let h=foldHead('pvp','Поединок',`сегодня ${S.matchesToday} ${plural(S.matchesToday,'матч','матча','матчей')}`);
   if(!OPEN.pvp){ $('pvp').innerHTML=h; return; }
-  h+=`<p class="muted">Сегодня сыграно ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го — половина, с 9-го — четверть. Соперник подбирается по четырём характеристикам боевой колоды; система выбирает ближайший из кандидатов.</p>`;
+  const pvpMin=profilePvpMin();
+  h+=`<p class="muted">Сегодня сыграно ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го — половина, с 9-го — четверть. Соперник подбирается по четырём характеристикам боевой колоды; система выбирает ближайший из кандидатов.${pvpMin?` <b>Профиль 3:</b> весь PvP доступен только при БК ≥ ${pvpMin}; сейчас ${bkList().length}.`:''}</p>`;
   h+='<div class="modes">';
   Object.entries(CFG.modes).forEach(([k,m])=>{
     const ok=av.includes(k)&&!M&&bkList().length>=m.cards;
     h+=`<button class="mcard" onclick="startMatch('${k}')" ${ok?'':'disabled'}>
       <i>${icon[k]}</i>
       <span><b>${m.name}</b><span>${m.cards} ${plural(m.cards,'карта','карты','карт')} в руке · ${m.cards} ${plural(m.cards,'раунд','раунда','раундов')}</span></span>
-      <u>${ok?`+${m.win} монет`:`нужно ${m.access} карт`}<s>${ok?`ничья ${m.draw} · проигрыш ${m.lose}`:'ещё закрыт'}</s></u></button>`;
+      <u>${ok?`+${m.win} монет`:(pvpMin&&bkList().length<pvpMin?`БК ≥ ${pvpMin}`:`нужно ${m.access} карт`)}<s>${ok?`ничья ${m.draw} · проигрыш ${m.lose}`:(pvpMin&&bkList().length<pvpMin?'PvP временно закрыт':'ещё закрыт')}</s></u></button>`;
   });
   h+='</div>';
   $('pvp').innerHTML=h;
@@ -2816,14 +3335,15 @@ function bonusGain(b, myV, cardId, statIdx){
 // Одна игровая карта. mode: 'name' — характеристики кликабельны; 'pick' — карта кликабельна целиком; 'flat' — только показ
 function battleCardHTML(id,{mode='flat',hotStat=null,selected=false,onCard='',onStat='',badge=''}={}){
   const c=CARDS[id];
-  const top=c.st.indexOf(Math.max(...c.st));
+  const sorted=c.st.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+  const top=sorted[0].i, second=sorted[1].i;
   let h=`<div class="pcard ${c.rar}${selected?' sel':''}" ${mode==='pick'&&onCard?`onclick="${onCard.replace('{id}',id)}"`:''}>
     ${badge?`<span class="c3-badge">${badge}</span>`:''}<div class="phead"><div class="pname">${c.name}</div>
       <div class="prar"><i class="rdot ${c.rar}"></i>${RAR_RU[c.rar]}</div></div>
     <div class="pface">${cardIcon(c)}</div>
     <div class="pstats">`;
   c.st.forEach((v,si)=>{
-    const cls = si===hotStat ? 'hot' : (si===top?'top':'');
+    const cls = si===hotStat ? 'hot' : ((si===top||si===second)?'top':'');
     if(mode==='name') h+=`<button class="pstat ${cls}" onclick="${onStat.replace('{id}',id).replace('{si}',si)}"><span>${CFG.statNames[si]}</span><b>${v}</b></button>`;
     else h+=`<div class="pstat ${cls}"><span>${CFG.statNames[si]}</span><b>${v}</b></div>`;
   });
@@ -2835,27 +3355,103 @@ const ginner=h=>`<div class="ginner">${h}</div>`;
 const plural=(n,a,b,c)=>{const d=n%10,e=n%100; return (d===1&&e!==11)?a:((d>=2&&d<=4&&(e<10||e>=20))?b:c);};
 // Полоса бонус-карт: весь запас, отсортированный по полезности. Первая помечена как
 // рекомендованная, но нажать можно любую — ограничения на выбор нет.
+function applicableBonuses(list){
+  return list.filter(b=>b.g>0||b.type==='cancel'||b.type==='shield'||b.type==='swap');
+}
 function bonusStrip(list, handler, selected){
-  if(!list.length) return '';
+  if(!list.length) return '<div class="ghelp">Бонус-карт в запасе нет.</div>';
+
+  const used=new Set((M&&M.usedBonusTypes)||[]);
+  const applicable=applicableBonuses(list).filter(b=>!used.has(b.i));
+  const applicableIds=new Set(applicable.map(b=>b.i));
+  const bestId=applicable.length ? applicable[0].i : null;
+
   let s='<div class="gbonus">';
-  list=list.filter(b=>b.g>0||b.type==='cancel'||b.type==='shield'||b.type==='swap').slice(0,10);
-  if(!list.length) return '<div class="ghelp">Подходящих бонусов для этого выбора нет.</div>';
-  list.forEach((b,k)=>{
-    const best = k===0 && b.g>0;
-    const cls = [b.rar, b.decides?'decides':'', best?'best':'', b.g?'':'useless',
-                 selected===b.i?'sel':''].filter(Boolean).join(' ');
-    const note = b.decides ? ' · переворачивает раунд' : (b.g ? '' : ' · в этом раунде не сработает');
-    const hold = !b.decides && b.rar==='L' ? ' · есть смысл приберечь' : '';
-    s+=`<button class="bchip ${cls}" onclick="${handler}(${b.i})">
-      ${best?'<u>рекомендуем</u>':''}${b.name} <i>×${b.n}</i><em>${b.desc}${note}${hold}</em></button>`;
+  list.forEach((b)=>{
+    const alreadyUsed=used.has(b.i);
+    const fits=applicableIds.has(b.i);
+    const best=b.i===bestId && !alreadyUsed;
+    const cls=[
+      b.rar,
+      fits?'fit':'',
+      b.decides?'decides':'',
+      best?'best':'',
+      alreadyUsed?'used':'',
+      selected===b.i?'sel':''
+    ].filter(Boolean).join(' ');
+
+    const note=b.decides ? ' · переворачивает раунд' : '';
+    const hold=!b.decides && b.rar==='L' ? ' · редкая тактика' : '';
+    const usedNote=alreadyUsed ? ' · уже использована в этом матче' : '';
+
+    s+=`<button class="bchip ${cls}" onclick="${handler}(${b.i})" ${alreadyUsed?'disabled':''}>
+      ${best?'<u>лучший сейчас</u>':''}${b.name}<em>${b.desc}${note}${hold}${usedNote}</em></button>`;
   });
   return s+'</div>';
 }
+
+function suitableHandIds(hand, statIdx){
+  if(statIdx===null||statIdx===undefined||statIdx<0||!hand.length) return new Set();
+  const ranked=[...hand].sort((a,b)=>CARDS[b].st[statIdx]-CARDS[a].st[statIdx]);
+  const best=CARDS[ranked[0]].st[statIdx];
+  const minCount=Math.min(ranked.length, Math.max(2,Math.ceil(ranked.length/2)));
+  const out=new Set(ranked.slice(0,minCount));
+  ranked.forEach(id=>{ if(CARDS[id].st[statIdx] >= best*.88) out.add(id); });
+  return out;
+}
+function handAnchorRatio(){
+  return 0.5;
+}
+function syncHandCarousel(el){
+  if(!el) return;
+  cancelAnimationFrame(el._raf);
+  el._raf=requestAnimationFrame(()=>{
+    const items=[...el.querySelectorAll('.fanitem')];
+    if(!items.length) return;
+    const anchor=el.scrollLeft+el.clientWidth*handAnchorRatio();
+    let best=items[0],dist=Infinity,activeIndex=0;
+    items.forEach((it,idx)=>{
+      const c=it.offsetLeft+it.offsetWidth/2;
+      const d=Math.abs(c-anchor);
+      if(d<dist){dist=d;best=it;activeIndex=idx;}
+    });
+    items.forEach((it,idx)=>{
+      it.classList.toggle('active',it===best);
+      const rel=Math.max(-3,Math.min(3,idx-activeIndex));
+      if(rel===0) it.removeAttribute('data-fan');
+      else it.setAttribute('data-fan',String(rel));
+    });
+  });
+}
+function focusHandItem(el){
+  if(!el) return;
+  const row=el.parentElement;
+  if(row){
+    const target=row.clientWidth*handAnchorRatio()-el.offsetWidth/2;
+    const max=Math.max(0,row.scrollWidth-row.clientWidth);
+    const left=Math.max(0,Math.min(max,el.offsetLeft-target));
+    row.scrollTo({left,behavior:'smooth'});
+    setTimeout(()=>syncHandCarousel(row),180);
+  }
+}
+function initHandCarousel(){
+  const el=document.getElementById('handCarousel'); if(!el) return;
+  const items=[...el.querySelectorAll('.fanitem')];
+  if(!items.length) return;
+  const selected=M&&M.myCard!==null&&M.myCard!==undefined ? M.myCard : null;
+  const target=selected!==null ? el.querySelector(`[data-card="${selected}"]`) : items[0];
+  if(target){
+    const desired=el.clientWidth*handAnchorRatio()-target.offsetWidth/2;
+    const max=Math.max(0,el.scrollWidth-el.clientWidth);
+    el.scrollLeft=Math.max(0,Math.min(max,target.offsetLeft-desired));
+  }
+  syncHandCarousel(el);
+}
+
 function renderMatch(){
   const m=M.m, el=$('match');
   el.style.display='block';
   let h='';
-  // ── шапка ──
   h+=`<div class="gtop">
     <div class="gscore"><span class="me">${M.myWins}</span><i>:</i><span class="op">${M.botWins}</span></div>
     <div class="ginfo"><b>${m.name}</b>
@@ -2866,11 +3462,8 @@ function renderMatch(){
     ${M.phase!=='over'?`<div class="gclock" id="turnclock">${turnLeft||CFG.turnSeconds}</div>`:''}
     <button class="gx" onclick="quitMatch()">${M.phase==='over'?'✕':'Выйти'}</button>
   </div>`;
-  if(M.phase!=='over'){ h+=`<div class="gbar"><i id="turnbar"></i></div>`;
-    const step=(M.phase==='name'||M.phase==='respond')?1:2;
-    h+=`<div class="stepbar"><span class="${step===1?'on':''}">1 · карта и бонус</span><span class="${step===2?'on':''}">2 · результат</span></div>`; }
+  if(M.phase!=='over') h+=`<div class="gbar"><i id="turnbar"></i></div>`;
 
-  // ── итог матча ──
   if(M.phase==='over'){
     const cls=M.result==='победа'?'win':(M.result==='ничья'?'':'lose');
     h+=`<div class="gover"><div class="gres ${cls}">${M.result==='победа'?'Победа':(M.result==='ничья'?'Ничья':'Поражение')} ${M.myWins}:${M.botWins}</div>
@@ -2880,115 +3473,110 @@ function renderMatch(){
     el.innerHTML=ginner(h); stopTurnTimer(); return;
   }
 
-
-  // ── рука соперника ──
-  h+=`<div class="gopp"><div class="glabel">Соперник · карт ${M.botHand.length}</div><div class="gbacks">`;
-  for(let i=0;i<M.botHand.length;i++) h+=`<div class="gback"></div>`;
-  h+=`</div></div>`;
-
-  // ── стол ──
   const R=(M.phase==='reveal')?M.reveal:null;
-  const L=null;
-  const show=R;
-  h+='<div class="gtable">';
-  if(show){
-    const duel=(cid,val,bonusName,bonusIdx,side)=>{
-      const c=CARDS[cid];
-      const base=c.st[show.statIdx], delta=val-base;
-      const b=(bonusIdx!==null&&bonusIdx!==undefined)?BONUS[bonusIdx]:null;
-      let d=`<div class="dwrap">
-        <div class="dcard ${c.rar} ${side}">
-        <div class="dtop"><span class="dside">${side==='op'?'соперник':'вы'}</span>
-          <span class="drar"><i class="rdot ${c.rar}"></i>${RAR_RU[c.rar]}</span></div>
-        <div class="dbody"><div class="dface">${cardIcon(c)}</div>
-          <div class="dinfo"><div class="dname">${c.name}</div>
-            <div class="dval">${delta?`<s>${base}</s><em class="${delta>0?'up':'dn'}">${val}</em>`:val}</div></div></div>
-        <div class="dstats">`;
-      c.st.forEach((v,si)=>{ d+=`<span class="dst ${si===show.statIdx?'hot':''}">${CFG.statShort[si]}<b>${v}</b></span>`; });
-      d+=`</div></div>`;
-      if(b||bonusName){
-        const bb=b||{rar:'C',name:bonusName,desc:''};
-        d+=`<div class="dmini ${bb.rar}"><i class="rdot ${bb.rar}"></i><b>${bb.name}</b>
-             <s>${bb.desc||''}</s>${delta?`<u class="${delta>0?'up':'dn'}">${delta>0?'+':''}${delta}</u>`:''}</div>`;
-      }
-      return d+`</div>`;
-    };
-    const outcome = R ? '' : (L.res==='win'?' won':(L.res==='lose'?' lost':' tied'));
-    h+=`<div class="gduel${ANIM.win?outcome:''}">
-      ${duel(show.botCard, show.botV, show.botBonusName, show.botBonusIdx, 'op')}
-      <div class="gvs"><span class="gstat">${CFG.statNames[show.statIdx]}</span><span class="gvsx">против</span></div>
-      ${duel(show.myCard, show.myV, show.myBonusName, show.myBonusIdx, 'me')}
-    </div>`;
-    if(R){
-      const d=R.myV-R.botV;
-      h+=`<div class="gverd ${d>0?'win':(d<0?'lose':'draw')}">${d>0?`Вы впереди на ${d}`:(d<0?`Вы позади на ${-d}`:'Поровну')}</div>`;
-    } else {
-      h+=`<div class="gverd ${L.res==='win'?'win':(L.res==='lose'?'lose':'draw')}">
-        ${L.res==='win'?'Раунд выигран — карта забрана':(L.res==='lose'?'Раунд проигран — карта ушла':'Ничья')}</div>`;
+  const BR=M.boardReveal||R;
+  const answering=M.namer==='bot';
+  const selected=M.myCard!==null && M.myCard!==undefined;
+  const shownStat=BR?BR.statIdx:(answering?M.pendingStat:(selected?M.myStat:null));
+
+  h+=`<div class="gopp"><div class="glabel">Карты соперника</div><div class="goppbar">
+    <div class="opstack"><div class="gback"></div><div class="gback"></div><div class="gback"></div><span class="stackcount">×${M.botHand.length}</span></div>
+  </div></div>`;
+
+  const slotCard=(side)=>{
+    const mine=side==='me';
+    if(BR){
+      const cid=mine?BR.myCard:BR.botCard;
+      const result=BR.res==='draw'?'draw':((mine&&BR.res==='win')||(!mine&&BR.res==='lose')?'win':'lose');
+      return `<span class="slotresult ${result}">${result==='win'?'выиграл':(result==='lose'?'проиграл':'ничья')}</span><div class="slotopen">${battleCardHTML(cid,{mode:'flat',hotStat:BR.statIdx})}</div>`;
     }
-  } else {
-    h+=`<div class="gduel">
-      <div class="dcard empty"><span>карта соперника<br><em>откроется после хода</em></span></div>
-      <div class="gvs"><span class="gvsx">против</span></div>
-      <div class="dcard empty"><span>ваша карта<br><em>выберите ниже</em></span></div></div>`;
+    if(selected) return `<div class="slotback"></div>`;
+    return `<div class="slotempty">${mine?'Ваша карта':'Карта соперника'}<br><span>появится здесь</span></div>`;
+  };
+
+  h+=`<div class="playboard">
+    <div class="playslot op"><span class="slotlabel">Соперник</span>${slotCard('op')}</div>
+    <div class="boardmid"><div class="roundstat"><span>Играем по</span><b>${shownStat===null||shownStat===undefined?'выберите':CFG.statNames[shownStat]}</b></div><div class="versus">VS</div></div>
+    <div class="playslot me"><span class="slotlabel">Вы</span>${slotCard('me')}</div>
+  </div>`;
+
+  if(BR){
+    h+=`<div class="revealnote ${BR.res}">${BR.res==='win'?'Раунд выигран':(BR.res==='lose'?'Раунд проигран':'Ничья')}</div>`;
+    if(BR.statChooser==='bot'){
+      h+=`<div class="chosenstatnote"><span>Соперник выбрал характеристику</span><b>${CFG.statNames[BR.statIdx]}</b></div>`;
+    }
+    h+=`<button class="gbtn revealnext" onclick="advanceBoardReveal()">Готов — дальше →</button>`;
+    if(M.history && M.history.length){
+      h+=`<button class="fhead ghist" onclick="toggleOpen('rounds')"><span class="fchev ${OPEN.rounds?'on':''}">›</span><b>История раундов</b><span class="fright">${M.history.length}/${m.cards}</span></button>`;
+      if(OPEN.rounds) h+=roundsTable(M.history);
+    }
+    el.innerHTML=ginner(h);
+    return;
   }
-  h+='</div>';
 
-  const own=turnBonusOwnedList();
-
-  // ── фаза вскрытия: выбор бонуса ──
-  if(R){
-    h+=`<div class="gask mine">Карты вскрыты — примените бонус-карту или играйте так.</div>`;
-    if(own.length){
-      const scored=bonusRanked(R.statIdx, R.myCard, R.myV, R.botV);
-      h+=bonusStrip(scored, 'resolveRound', null);
-    } else h+=`<div class="muted" style="font-size:12px">Запас бонус-карт пуст.</div>`;
-    h+=`<button class="gbtn" onclick="resolveRound(null)">Играть без бонус-карты →</button>`;
-    el.innerHTML=ginner(h); paintTimer(); return;
-  }
-
-  // ── выбор основной карты/характеристики, затем бонус, затем подтверждение ──
-  const answering = M.namer==='bot';
-  const selected = M.myCard!==null && M.myCard!==undefined;
   h+=`<div class="gask ${answering?'theirs':'mine'}">${answering
-      ? `Соперник выбрал <b>${CFG.statNames[M.pendingStat]}</b>. Сначала выберите карту, затем при желании бонус.`
-      : 'Ваш ход: сначала выберите карту и характеристику, затем при желании бонус.'}</div>`;
+      ? `Соперник выбрал <b>${CFG.statNames[M.pendingStat]}</b>. Пролистайте руку и выберите карту.`
+      : 'Ваш ход: пролистайте руку, выберите карту и характеристику.'}</div>`;
 
-  // ── своя рука ──
-  h+=`<div class="glabel">1 · ${answering?'Выберите карту':'Выберите карту и характеристику'} · в руке ${M.myHand.length}</div><div class="ghand">`;
-  const st = answering ? M.pendingStat : null;
-  const hand=[...M.myHand].sort((a,b)=> answering ? CARDS[b].st[st]-CARDS[a].st[st] : Math.max(...CARDS[b].st)-Math.max(...CARDS[a].st));
+  // Вся рука отображается всегда. Подходящие карты по текущей характеристике подсвечиваются.
+  const st=answering?M.pendingStat:(selected?M.myStat:null);
+  const hand=[...M.myHand].sort((a,b)=> st!==null&&st!==undefined
+      ? CARDS[b].st[st]-CARDS[a].st[st]
+      : Math.max(...CARDS[b].st)-Math.max(...CARDS[a].st));
+  const suitable=suitableHandIds(hand,st);
+  h+=`<div class="glabel">Карты в руке · ${hand.length}</div>
+      <div class="ghand" id="handCarousel" onscroll="syncHandCarousel(this)">`;
   hand.forEach((id,k)=>{
-    h+=battleCardHTML(id,{
-      mode: answering ? 'pick' : 'name', hotStat: answering?st:(M.myCard===id?M.myStat:null),
-      selected:M.myCard===id, badge:k===0?'сильнейшая':'',
-      onCard: `selectMove({id},${answering?M.pendingStat:-1})`, onStat: `selectMove({id},{si})`,
-    });
+    const cls=[suitable.has(id)?'fit':'', k===0?'best':''].filter(Boolean).join(' ');
+    h+=`<div class="fanitem ${cls}" data-card="${id}" onclick="focusHandItem(this)">
+      ${battleCardHTML(id,{
+        mode:answering?'pick':'name',
+        hotStat:st,
+        selected:M.myCard===id,
+        onCard:`selectMove({id},${answering?M.pendingStat:-1})`,
+        onStat:`selectMove({id},{si})`
+      })}
+    </div>`;
   });
-  h+='</div>';
+  h+=`</div><div class="carouselhint">Лучшая карта всегда первая слева · смахивайте веер влево/вправо</div>`;
 
   if(selected){
     const c=CARDS[M.myCard];
-    h+=`<div class="gask mine"><b>Выбрано:</b> ${c.name} · ${CFG.statNames[M.myStat]} ${c.st[M.myStat]}</div>`;
-    const own=turnBonusOwnedList();
-    if(own.length){
-      const ranked=bonusRanked(M.myStat,M.myCard);
-      const total=own.reduce((a,b)=>a+b.n,0);
-      h+=`<div class="glabel">2 · Бонус · можно 1 на раунд · в запасе ${total}</div>`;
-      h+=`<div class="ghelp">Показаны только карты, которые применимы к выбранной характеристике. Соперник ещё не вскрыт.</div>`;
+    const ranked=bonusRanked(M.myStat,M.myCard);
+    const applicable=applicableBonuses(ranked);
+    const decisionDone=M.bonusDecision!=='pending';
+
+    h+=`<div class="gask mine"><b>Выбрано:</b> ${c.name} · ${CFG.statNames[M.myStat]} <b>${c.st[M.myStat]}</b></div>`;
+    h+=`<div class="bonusdecision ${decisionDone?'done':'pending'}">
+      <div class="bdtitle">Бонус-карта · 1 на раунд</div>
+      <div class="bdsub">${ranked.length
+        ? 'Показаны все типы бонус-карт по одной карточке без коэффициента количества. Подходящие подсвечены. Каждый тип можно использовать только один раз за матч.'
+        : 'Бонус-карт в запасе нет — играем без бонуса.'}</div>`;
+    if(ranked.length){
       h+=bonusStrip(ranked,'chooseMyBonus',M.myBonus);
+      h+=`<div class="bonusactions">
+        <button class="${M.bonusDecision==='skip'?'primary':''}" onclick="skipMyBonus()">Без бонуса</button>
+        <button disabled>${M.myBonus!==null?'Выбран: '+BONUS[M.myBonus].name:'Бонус не выбран'}</button>
+      </div>`;
+    } else if(M.bonusDecision==='pending'){
+      M.bonusDecision='skip';
     }
-    h+=`<button class="gbtn" onclick="confirmMove()">${M.myBonus!==null?'Играть с бонусом':'Играть без бонуса'} →</button>`;
+    h+=`</div>`;
+    h+=`<button class="gbtn" ${M.bonusDecision!=='pending'?'':'disabled'} onclick="confirmMove()">${
+      M.myBonus!==null?'Сыграть с «'+BONUS[M.myBonus].name+'»':'Сыграть ход'
+    } →</button>`;
   } else {
-    h+=`<div class="ghelp">После выбора карты появятся только подходящие бонусы и кнопка подтверждения.</div>`;
+    h+=`<div class="ghelp">Выберите карту${answering?'':' и характеристику'}. После этого игра покажет все подходящие бонус-карты.</div>`;
   }
+
   if(M.history && M.history.length){
     h+=`<button class="fhead ghist" onclick="toggleOpen('rounds')">
-      <span class="fchev ${OPEN.rounds?'on':''}">›</span><b>Сыгранные раунды</b>
-      <span class="fright">${M.history.length} из ${m.cards}</span></button>`;
+      <span class="fchev ${OPEN.rounds?'on':''}">›</span><b>История раундов</b>
+      <span class="fright">${M.history.length}/${m.cards}</span></button>`;
     if(OPEN.rounds) h+=roundsTable(M.history);
   }
   el.innerHTML=ginner(h);
+  requestAnimationFrame(initHandCarousel);
   paintTimer();
 }
 function quitMatch(){ stopTurnTimer(); M=null; $('match').style.display='none'; render(); }
@@ -3084,6 +3672,100 @@ function renderShop(){
   h+='</div>';
   $('shop').innerHTML=h;
 }
+
+function slotMetrics(sl){
+  const st=sl.S, stat=st.stat||{};
+  const u=(st.opened||[]).filter(Boolean).length;
+  const physical=(st.copies||[]).reduce((a,n)=>a+(n||0),0);
+  const playable=CARDS.filter(c=>(st.copies[c.id]||0)>0 && !(st.blocked||[]).includes(c.id)).length;
+  const bk=Math.min(CFG.bkSize,playable);
+  const fills=[...Array(12).keys()].map(d=>CARDS.filter(c=>c.deck===d).filter(c=>st.opened[c.id]).length);
+  const closed=fills.filter(f=>f===10).length;
+  const bonusStock=Object.values(st.bonus||{}).reduce((a,n)=>a+(n||0),0);
+  const matches=stat.matches||0, wins=stat.wins||0, losses=stat.losses||0, draws=stat.draws||0;
+  const dups=(stat.dups||0);
+  const order=(st.deckOrder||[]).slice(0,6).map(d=>CFG.animals[d]).join(' → ');
+  const gate=sl.v.prof===3 ? 10 : 0;
+  return {
+    u,physical,bk,closed,minDeck:Math.min(...fills),bonusStock,matches,wins,losses,draws,
+    wr:matches?Math.round(wins/matches*100):0,
+    dups,dupsPack:stat.dupsPack||0,dupsPvP:stat.dupsPvP||0,
+    packs:st.packsBought||0,stars:st.stars||0,starsEarned:stat.starsEarned||0,
+    coins:Math.round(st.coins||0),coinsEarned:stat.coinsEarned||0,coinsSpent:stat.coinsSpent||0,
+    rating:st.rating||0,bonusUsed:stat.bonusUsed||0,
+    roundsW:stat.rounds||0,roundsL:stat.roundsLost||0,roundsD:stat.roundDraws||0,
+    cardsWon:stat.cardsWon||0,cardsLost:stat.cardsLost||0,
+    daily:st.dailyDone||0,friends:st.friends||0,qr:st.qrUsed||0,
+    gate,gateOk:!gate||bk>=gate,order
+  };
+}
+function renderCompareStats(){
+  const el=$('comparestats'); if(!el) return;
+  const rows=[
+    ['День', x=>x.day],
+    ['Уникальных карт', x=>x.u],
+    ['Физических карт на руках', x=>x.physical],
+    ['Карт в БК', x=>x.bk],
+    ['Статус PvP', x=>x.gate ? (x.gateOk?'Доступно · БК ≥10':'Недоступно · нужно 10') : 'Обычный порог'],
+    ['Закрыто колод', x=>`${x.closed}/12`],
+    ['Минимум карт в одной колоде', x=>x.minDeck],
+    ['Дублей всего', x=>x.dups],
+    ['Дублей из паков', x=>x.dupsPack],
+    ['Дублей из PvP', x=>x.dupsPvP],
+    ['Паков куплено', x=>x.packs],
+    ['Звёзд на балансе', x=>x.stars],
+    ['Звёзд заработано', x=>x.starsEarned],
+    ['Бонус-карт в запасе', x=>x.bonusStock],
+    ['Бонус-карт использовано', x=>x.bonusUsed],
+    ['Монет на балансе', x=>x.coins],
+    ['Монет заработано', x=>x.coinsEarned],
+    ['Монет потрачено', x=>x.coinsSpent],
+    ['Рейтинг', x=>x.rating],
+    ['Матчей сыграно', x=>x.matches],
+    ['Побед', x=>x.wins],
+    ['Ничьих', x=>x.draws],
+    ['Поражений', x=>x.losses],
+    ['Винрейт', x=>`${x.wr}%`],
+    ['Раунды — победы', x=>x.roundsW],
+    ['Раунды — поражения', x=>x.roundsL],
+    ['Раунды — ничьи', x=>x.roundsD],
+    ['Карт выиграно', x=>x.cardsWon],
+    ['Карт потеряно', x=>x.cardsLost],
+    ['Daily выполнено', x=>`${x.daily}/60`],
+    ['Друзей приглашено', x=>x.friends],
+    ['QR использовано', x=>x.qr],
+    ['Первые 6 колод', x=>x.order],
+  ];
+
+  const data=SLOTS.map(sl=>{
+    const x=slotMetrics(sl);
+    x.day=sl.S.day||0;
+    return x;
+  });
+
+  let h=`<h3>Статистика всех профилей <span class="tag">6 вариантов</span></h3>
+    <p class="muted">Профили 2 и 3 используют одинаковую выдачу карт. У профиля 3 единственное дополнительное правило: PvP становится доступен только когда в БК есть минимум 10 карт.</p>
+    <div class="stat-vertical-wrap">
+      <table class="cmp stat-vertical">
+        <thead><tr>
+          <th>Параметр</th>
+          ${SLOTS.map((sl,i)=>`<th class="${i===ACTIVE?'on':''}"><button class="tablepick" onclick="switchTo(${i})">${sl.v.id}</button></th>`).join('')}
+        </tr></thead>
+        <tbody>`;
+
+  rows.forEach(([label,get])=>{
+    h+=`<tr><th>${label}</th>`;
+    data.forEach((x,i)=>{
+      const val=get(x);
+      h+=`<td class="${i===ACTIVE?'on':''}">${val}</td>`;
+    });
+    h+='</tr>';
+  });
+
+  h+='</tbody></table></div>';
+  el.innerHTML=h;
+}
+
 function renderStats(){
   const s=S.stat, tot=s.matches||1;
   const rows=[
@@ -3108,11 +3790,11 @@ function renderRules(){
   <b>Сейф.</b> Фиксированные 10 карт в хвосте. Снятие по волнам: 10 / 9 / 8 / 7 / 6 / 5 / 4 / 3 / 2 / 0; последние две карты Лиса выходят на финальной волне.<br><br>
   <b>Выдача.</b> Новизна ${Math.round(TUNE.noveltyStart*100)} / ${Math.round(TUNE.novelty30*100)} / ${Math.round(TUNE.novelty60*100)} / ${Math.round(TUNE.novelty85*100)}%. Для новой карты сначала работают стартовый приоритет и специальные шаги профиля, затем лестница (${st.map(s=>Math.round(s.share*100)+'%').join(' / ')}). Дубли по редкости 70 / 20 / 10.<br><br>
   <b>Дубли и звёзды.</b> Дубль даёт физический экземпляр и +1 / 2 / 3★. Потеря именно дубля в PvP уменьшает звёзды на его стоимость. Покупка пака за звёзды физически сжигает соответствующие дубли — двойной выгоды нет.<br><br>
-  <b>PvP.</b> Доступ 5 / 15 / 30 уникальных карт; матч 3 / 5 / 7 раундов. Монетка задаёт первого называющего, дальше базовое право строго чередуется. Отвечающий видит названную характеристику. Проигрыш раунда отдаёт физический экземпляр; история коллекции остаётся открытой.<br><br>
+  <b>PvP.</b> Базовый доступ 5 / 15 / 30 уникальных карт; матч 3 / 5 / 7 раундов. В профиле 3 поверх этого действует дополнительный порог: любой PvP доступен только при БК ≥ 10. Монетка задаёт первого называющего, дальше базовое право строго чередуется. Отвечающий видит названную характеристику. Проигрыш раунда отдаёт физический экземпляр; история коллекции остаётся открытой.<br><br>
   <b>Матчмейкинг.</b> Сравнивается не только редкость: бот выбирается по 4-компонентному профилю силы текущей боевой колоды. Боевая колода — максимум 50 физических незаблокированных карт.<br><br>
   <b>Награда PvP.</b> 1–5 матчей в сутки — 100%, 6–8 — 50%, с 9-го и дальше — 25% без возврата к полной награде. Та же кривая действует на рейтинг.<br><br>
   <b>Задания.</b> Daily-счётчики живут только текущий день. Weekly-действия считаются только внутри своей недели; состояние коллекции (например 48 карт) проверяется глобально.<br><br>
-  <b>Бонус-карты.</b> 34 вида: 20 обычных / 12 редких / 2 легендарные. Универсальные ±8 / ±15 / ±25, адресные ±18 / ±25 / ±35 по четырём характеристикам. Щит и Отмена — редкие; Подмена и Ярость — легендарные. Бонус выбирается вместе с основной картой до вскрытия соперника. Ярость ×1,6 работает только на обычной карте.<br><br>
+  <b>Бонус-карты.</b> 34 вида: 20 обычных / 12 редких / 2 легендарные. Универсальные ±8 / ±15 / ±25, адресные ±18 / ±25 / ±35 по четырём характеристикам. Щит и Отмена — редкие; Подмена и Ярость — легендарные. Бонус выбирается вместе с основной картой до вскрытия соперника. Ярость ×1,6 работает на сравниваемой характеристике карты любой редкости.<br><br>
   <b>Паки за звёзды.</b> Только карточные: Стандартный 35★ / Эпик 60★ / Лут 90★. Отдельного бонус-пака за звёзды в актуальном балансе нет.<br><br>
   <b>Витрина.</b> 2 440 цифровых призов: 1 416×100 Robux, 400×500 Robux, 144×1 100 Robux, 240×сертификат 1 000 ₽, 152×3 000 ₽, 88×5 000 ₽. Robux суммарно 500 000. Сетка B: 750 / 1 900 / 2 300 / 3 100 / 4 400 / 6 000 монет; полный выкуп изымает 4 017 200 монет. Партии добавляются еженедельно и переносятся; 1 приз каждого вида на аккаунт. Сертификат 5 000 ₽ открывается с 4-й недели.<br><br>
   <b>Характеристики.</b> Используется фиксированная таблица 120 карт; значения не генерируются и не округляются.
