@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BabyFox Лесная лига — DEMO final mobile · 6-profile vertical stats v17</title>
+<title>BabyFox Лесная лига — DEMO final mobile · mobile user UI + table bonuses v19</title>
 <style>
 :root{
   --bg:#0E1310; --panel:#172019; --panel2:#1E2A21; --line:#2C3A2F;
@@ -1280,6 +1280,169 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
   .stat-vertical td{min-width:82px;padding:7px 5px}
 }
 
+
+/* ===== mobile cleanup v19 ===== */
+html,body{max-width:100%;overflow-x:hidden}
+body{overflow-wrap:anywhere}
+button,input,select,textarea{min-width:0;max-width:100%}
+img,svg{max-width:100%}
+.screens,.screen,.panel,.hero,.ginner,.task,.mcard,.mode,.prize,.ptab,.pdesc,.bonusdecision{min-width:0}
+.muted,.pdesc,.qnote,.bdsub,.prize small,.mode span,.mcard span,.bchip em,.btok s{
+  overflow-wrap:anywhere;word-break:normal;white-space:normal
+}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hseason{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.userprogress .qhead{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.userprogress .qnote{font-size:11px;line-height:1.45;color:var(--muted)}
+.devrules summary{margin:0}
+.devrulesbody{line-height:1.65;padding:10px 2px 2px}
+
+/* Стол: характеристика сверху, два равных слота ниже */
+.playboard{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  align-items:stretch!important;
+}
+.boardmid{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-width:0
+}
+.boardmid .roundstat{min-width:0!important;max-width:190px;text-align:center!important}
+.boardmid .versus{margin:0!important;white-space:nowrap}
+.playslot{min-width:0!important;overflow:visible!important;padding:22px 6px 8px!important}
+.slotopen{min-width:0;width:100%}
+.slotduo{
+  display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:5px;
+  align-items:center;width:100%;min-width:0
+}
+.slotduo.solo{grid-template-columns:minmax(0,126px);justify-content:center}
+.slotmain{min-width:0}
+.slotbonus{
+  min-width:0;align-self:stretch;border:1px solid var(--line);border-top:3px solid var(--c);
+  border-radius:9px;background:var(--panel2);padding:7px 5px;
+  display:flex;flex-direction:column;justify-content:center;gap:3px;
+  animation:slotFlip .9s ease-out
+}
+.slotbonus.R{border-top-color:var(--r)}
+.slotbonus.L{border-top-color:var(--l)}
+.slotbonus span{font-size:7px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.slotbonus b{font-size:9px;line-height:1.15;overflow-wrap:anywhere}
+.slotbonus em{font-size:7.5px;line-height:1.2;font-style:normal;color:var(--muted);overflow-wrap:anywhere}
+.slotduo.withbonus .pcard .pname{font-size:8.5px!important}
+.slotduo.withbonus .pcard .pface{height:30px!important;font-size:19px!important}
+.slotduo.withbonus .pcard .pstats{padding:5px 5px 6px!important}
+.slotduo.withbonus .pcard .pstat{font-size:6.5px!important;padding:2px 3px!important;gap:2px!important}
+.slotduo.withbonus .pcard .pstat b{font-size:8.5px!important}
+.slotresult{max-width:calc(100% - 12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* У использованных бонусов больше нет визуального состояния: они вообще не рендерятся */
+.gbonus .bchip.used{display:none!important}
+
+/* Нижнее меню: 6 пунктов без наложений */
+.tabbar{gap:1px;padding-left:3px;padding-right:3px}
+.tabbar .tab{min-width:0!important;padding:5px 1px!important;gap:2px}
+.tabbar .tab i{font-size:15px}
+.tabbar .tab span{font-size:7.5px!important;line-height:1.05;white-space:nowrap}
+
+/* Общие карточки и кнопки */
+button.mode{min-width:0!important}
+.mcard{min-width:0}
+.mcard>span,.mcard .mcopy{min-width:0}
+.bonusactions button{white-space:normal;line-height:1.2}
+.gbonus .bchip{white-space:normal;overflow:visible!important}
+.gbonus .bchip b,.gbonus .bchip em{overflow-wrap:anywhere}
+
+/* Профили и служебная панель не ломают мобильный экран */
+.ptrow{min-width:0}
+.ptab{min-width:0!important}
+.autorow>*{max-width:100%}
+.usercards{min-width:0}
+
+@media(max-width:460px){
+  :root{--appw:100vw}
+  .app{width:100%;padding-bottom:64px}
+  .screens{padding:8px}
+  .panel{padding:10px;border-radius:12px}
+  .appbar{padding:7px 9px 6px}
+  .abstats{gap:4px}
+  .ab{font-size:9.5px;padding:2px 6px}
+  h3{font-size:11.5px;line-height:1.25;margin:14px 0 7px}
+  .hero{padding:11px 10px}
+  .hero-top{display:flex!important;grid-template-columns:none!important;padding:0!important}
+  .hbig{gap:5px;align-items:flex-end}
+  .hbig .n{font-size:34px}
+  .hbig .lb{font-size:8.5px;letter-spacing:.08em;max-width:110px;text-align:right}
+  .hgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px}
+  .hgrid>div{padding:7px 2px}
+  .hgrid b{font-size:16px}
+  .hgrid>div>span{font-size:7.5px}
+  .hmain{grid-template-columns:1fr!important;gap:6px}
+  .hplay,.hnext{width:100%;min-height:46px}
+  .striphead{align-items:flex-start;flex-direction:column;gap:2px}
+  .striphead a{font-size:10px}
+  .dgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .dtile{min-width:0}
+  .cards{grid-template-columns:1fr!important}
+  .chip{min-width:0}
+  .chip b,.chip .st{overflow-wrap:anywhere;white-space:normal}
+  .task{flex-direction:column;align-items:stretch!important;gap:7px}
+  .task>button{width:100%}
+  .row.packrow{display:grid;grid-template-columns:1fr!important;width:100%}
+  .row.packrow button.mode{width:100%;min-height:0}
+  .shopgrid{grid-template-columns:1fr!important}
+  .prize{min-height:0}
+  .mcard{
+    grid-template-columns:30px minmax(0,1fr)!important;
+    gap:8px!important;padding:10px!important
+  }
+  .mcard>i{grid-row:1/3}
+  .mcard>u{grid-column:2;text-align:left!important;margin-top:2px}
+  .mcard u s{margin-top:2px}
+  .ginner{padding-left:8px!important;padding-right:8px!important}
+  .gtop{gap:5px}
+  .gscore{font-size:17px}
+  .gclock{min-width:34px}
+  .playboard{padding:8px 6px!important;gap:6px!important}
+  .playslot{min-height:154px!important;padding:22px 5px 7px!important}
+  .slotduo{grid-template-columns:minmax(0,1fr) 58px;gap:4px}
+  .slotduo.solo{grid-template-columns:minmax(0,118px)}
+  .slotbonus{padding:6px 4px}
+  .slotbonus b{font-size:8.5px}
+  .slotbonus em{font-size:7px}
+  .slotopen .pcard{min-height:128px!important}
+  .slotopen .pcard .phead{padding:5px 5px 4px!important}
+  .slotopen .pcard .pname{overflow-wrap:anywhere}
+  .boardmid .roundstat{max-width:150px}
+  .boardmid .versus{font-size:7.5px}
+  .bonusactions{grid-template-columns:1fr!important}
+  .bonusactions button{width:100%}
+  .gbonus{margin-left:0;margin-right:0;padding-left:0}
+  .gbonus .bchip{flex:0 0 146px!important;width:146px!important;padding:8px}
+  .ghand{margin-left:-8px!important;margin-right:-8px!important}
+  .carouselhint{padding:0 8px}
+  .ptrow{display:grid!important;grid-template-columns:1fr!important;gap:6px}
+  .ptrow2{grid-template-columns:1fr!important}
+  .ptab{width:100%;padding:8px}
+  .pdesc{font-size:10.5px}
+  .autorow{display:grid;grid-template-columns:1fr;gap:6px}
+  .autorow .tgl{width:100%;text-align:left}
+  .usercards{grid-template-columns:1fr!important}
+  .topbtns{display:grid!important;grid-template-columns:1fr 1fr;gap:6px}
+  .topbtns button{min-width:0;padding:8px 5px;font-size:10.5px}
+  .stat-vertical-wrap{max-width:100%}
+  .stat-vertical{min-width:690px!important}
+  .stat-vertical thead th:first-child,.stat-vertical tbody th{min-width:160px!important;max-width:160px!important}
+}
+@media(max-width:360px){
+  .tabbar .tab span{font-size:7px!important}
+  .tabbar .tab i{font-size:14px}
+  .hgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .dgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .slotduo{grid-template-columns:minmax(0,1fr) 52px}
+  .slotbonus b{font-size:8px}
+  .slotbonus em{font-size:6.5px}
+}
+
 </style>
 </head>
 <body>
@@ -1292,7 +1455,7 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
 <div id="match" class="gamewrap" style="display:none"></div>
 <div class="app">
   <div class="appbar">
-    <div class="abtitle">Лесная лига <span style="font-size:10px;color:var(--muted);font-weight:600">final mobile · 6-profile vertical stats v17</span></div>
+    <div class="abtitle">Лесная лига <span style="font-size:10px;color:var(--muted);font-weight:600">final mobile · mobile user UI + table bonuses v19</span></div>
     <div class="abstats">
       <span class="ab">День <b id="ab_day">1</b></span>
       <span class="ab">Карт <b id="ab_cards">0</b></span>
@@ -1327,7 +1490,7 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
     </section>
     <section class="screen" data-s="more">
       <div class="panel">
-        <h3>Прогон времени</h3>
+        <h3>Служебная панель DEMO</h3>
         <div class="topbtns">
           <button class="primary" id="btnNext" onclick="nextDayAll(true)">Прожить день (авто)</button>
           <button onclick="nextDaysAll(7)">+ неделя</button>
@@ -1456,9 +1619,10 @@ const CFG = {
   bkSize: 50,
   turnSeconds: 60,          // время на ход в матче
   packs: [
-    {id:'std',  name:'Стандартный', price:35, cards:5, guarantee:null},
-    {id:'epic', name:'Эпик-пак',    price:60, cards:5, guarantee:'rare'},
-    {id:'loot', name:'Лут-пак',     price:90, cards:5, guarantee:'new'},
+    {id:'std',   name:'Стандартный пак', price:35, cards:5, forceNew:0, bonus:0},
+    {id:'bonus', name:'Бонус-пак',       price:45, cards:4, forceNew:0, bonus:1},
+    {id:'epic',  name:'Эпик-пак',        price:60, cards:5, forceNew:1, bonus:0},
+    {id:'loot',  name:'Лут-пак',         price:90, cards:5, forceNew:2, bonus:1},
   ],
   achievements: { bk50:200, full:500 },
   // Витрина — вариант B («размеренный») из финальной модели фонда.
@@ -2069,13 +2233,16 @@ let CAPTURE=false;          // собирать ли выданные паки �
 let REVEAL=[];              // очередь паков на вскрытие
 function openPack(n=5,opts={}){
   const got=[];
+  const forceNewCount=Math.max(0,Math.min(n,opts.forceNewCount||0));
   for(let i=0;i<n;i++){
-    const g=grantCard(opts.forceNew===true, i===0?(opts.guarantee||null):null);
+    // Гарантия новой карты никогда не обходит cap() и safeLocked():
+    // grantCard сам проверяет текущий потолок перед КАЖДОЙ картой.
+    const g=grantCard(i<forceNewCount, null);
     if(g) got.push(g);
   }
   checkAchievements();
   if((CAPTURE || (MODE==='play' && !NORENDER)) && got.length)
-    REVEAL.push({title: opts.title || 'Пак из 5 карт', got: got.slice()});
+    REVEAL.push({title: opts.title || `Пак из ${n} карт`, got: got.slice()});
   return got;
 }
 function addBonus(n=1){
@@ -2130,7 +2297,6 @@ function nextDay(){
   // волны
   while(S.wave<9 && S.day>=CFG.waveDays[S.wave+1]){
     S.wave++;
-    log(`Открылась волна ${S.wave+1}: потолок коллекции ${cap()} карт`,'good');
   }
   // вход
   const dow=((S.day-1)%7)+1;
@@ -2226,19 +2392,29 @@ function scanQR(){
 /* ================= МАГАЗИН ================= */
 function buyPack(id){
   const p=CFG.packs.find(x=>x.id===id);
+  if(!p) return;
   if(S.stars<p.price){ log('Недостаточно звёзд','warn'); render(); return; }
   if(!burnDuplicatesForStars(p.price)){ log('Недостаточно дублей для обмена на звёзды','warn'); render(); return; }
-  if(p.bonus){ addBonus(p.bonus); S.stat.bonusPacks=(S.stat.bonusPacks||0)+1;
-    log(`Куплен ${p.name} за ${p.price}★ — ${p.bonus} бонус-карт`,'good'); render(); return; }
+
   S.packsBought++; S.today.packsBought++;
-  const wasAtCap = uniq()>=cap();
-  const got=openPack(p.cards,{guarantee:p.guarantee,title:p.name});
+  const before=uniq();
+  const got=openPack(p.cards,{forceNewCount:p.forceNew||0,title:p.name});
   const nw=got.filter(g=>g.isNew).length;
-  if(p.guarantee==='new' && wasAtCap){
-    addBonus(2);
-    log(`${p.name} за ${p.price}★: новых карт пока нет, следующая волна ещё не открылась. Начислено 2 бонус-карты сверх пака`,'warn');
-  } else {
-    log(`${p.name} за ${p.price}★: ${nw} новых из ${got.length}`,'good');
+
+  if(p.bonus){
+    addBonus(p.bonus);
+    S.stat.bonusPacks=(S.stat.bonusPacks||0)+p.bonus;
+  }
+
+  const bonusTxt=p.bonus?` + ${p.bonus} бонус-карта${p.bonus===1?'':'ы'}`:'';
+  const guaranteeTxt=(p.forceNew||0)>0
+    ? ` · новых ${nw}/${p.forceNew} по гарантии из доступного пула`
+    : ` · новых ${nw}`;
+  log(`${p.name} за ${p.price}★: ${got.length} основных карт${bonusTxt}${guaranteeTxt}`,'good');
+
+  // Контроль: пакетная выдача не имеет права поднять уникальные карты выше cap().
+  if(uniq()>cap()){
+    log(`ОШИБКА КОНТРОЛЯ: пакет превысил потолок ${cap()} (${before} → ${uniq()})`,'warn');
   }
   render();
 }
@@ -2519,8 +2695,17 @@ function prepRound(){
 // В бою показывается по одной карточке каждого типа бонуса, который был у игрока на старте матча.
 // Количество экземпляров ×N остаётся только в разделе «Бонус-карты» вне боя.
 function bonusOwnedList(){
-  if(!M) return [];
-  return (M.myBonusTypes||[]).map(i=>({i,n:1,...BONUS[i]}));
+  // Вне матча показываем реальный запас с коэффициентами количества.
+  if(!M){
+    return Object.entries(S&&S.bonus?S.bonus:{})
+      .filter(([,n])=>n>0)
+      .map(([i,n])=>({i:+i,n,...BONUS[+i]}));
+  }
+  // В матче каждый тип показывается одной карточкой и после использования исчезает из выбора.
+  const used=new Set(M.usedBonusTypes||[]);
+  return (M.myBonusTypes||[])
+    .filter(i=>!used.has(i))
+    .map(i=>({i,n:1,...BONUS[i]}));
 }
 function turnBonusOwnedList(){ return bonusOwnedList(); }
 function botBonusList(){
@@ -2974,14 +3159,14 @@ function renderWelcome(){
     <div class="ohero">
       <div class="ologo">🦊</div>
       <div class="otitle">BabyFox <span>Лесная лига</span></div>
-      <div class="osub">Собирайте коллекцию из 120 карт двенадцати лесных зверей
-        и забирайте карты соперников в поединках. Сезон — 60 дней.</div>
+      <div class="osub">Собирайте коллекцию из 120 карт двенадцати лесных зверей,
+        играйте в поединки и развивайте свою колоду в течение сезона.</div>
     </div>
     <div class="orules">
-      <div class="orule"><i>🎴</i><div><b>Коллекция</b><span>12 колод по 10 карт. Карты приходят паками по пять — за вход, задания и друзей. QR-коды дают бонус-карты.</span></div></div>
-      <div class="orule"><i>⚔️</i><div><b>Поединки</b><span>Один на один. В каждом раунде сравниваете характеристику: победитель раунда забирает карту соперника, проигравший теряет только ту карту, которой ходил.</span></div></div>
-      <div class="orule"><i>🌊</i><div><b>Волны</b><span>Десять волн по календарю поднимают потолок коллекции. Раньше 46-го дня собрать все 120 карт невозможно.</span></div></div>
-      <div class="orule"><i>🎁</i><div><b>Призы</b><span>Монеты тратятся в витрине, звёзды за дубли — на паки. Каждую неделю топ-10 рейтинга получает призы BabyFox.</span></div></div>
+      <div class="orule"><i>🎴</i><div><b>Коллекция</b><span>12 колод по 10 карт. Получайте карты за вход, задания, друзей и паки.</span></div></div>
+      <div class="orule"><i>⚔️</i><div><b>Поединки</b><span>В каждом раунде сравнивается одна характеристика. Победитель забирает сыгранную карту соперника.</span></div></div>
+      <div class="orule"><i>✨</i><div><b>Развитие</b><span>По мере игры становятся доступны новые карты и возможности. Собирайте колоды и усиливайте боевой запас.</span></div></div>
+      <div class="orule"><i>🎁</i><div><b>Награды</b><span>Монеты тратятся в витрине, а звёзды за дубли — на дополнительные паки.</span></div></div>
     </div>
     <button class="obtn" onclick="startSeason()">Забрать стартовый пак →</button>
     <div class="rhint">В стартовом паке все 5 карт гарантированно новые</div>
@@ -3045,19 +3230,22 @@ function renderReveal(){
 function renderHero(){
   const el=$('hero'); if(!el) return;
   if(S.day===0){ el.innerHTML=''; return; }
-  const u=uniq(), capNow=cap(), pct=u/120*100, capPct=capNow/120*100;
+  const u=uniq(), pct=u/120*100;
   const dubs=S.copies.reduce((a,n,i)=>a+Math.max(0,n-(S.opened[i]?1:0)),0);
-  const nextWave = S.wave<9 ? CFG.waveDays[S.wave+1] : null;
   const dow=((S.day-1)%7)+1;
   const gift=[];
   if(CFG.loginCoins[dow]) gift.push(`${CFG.loginCoins[dow]} монет`);
   if(CFG.loginPackDays.includes(dow)) gift.push('пак из 5 карт');
   if(CFG.loginBonus[dow]) gift.push(`${CFG.loginBonus[dow]} бонус-карт`);
+  const pvpMin=profilePvpMin();
+  const pvpNeed=pvpMin?Math.max(pvpMin,3):3;
   el.innerHTML=`<div class="hero">
-    <div class="hrow"><div class="hday">День <b>${S.day}</b> из 60</div>
-      <div class="hwave">Волна ${S.wave+1} · паковый потолок ${capNow}</div></div>
+    <div class="hero-top">
+      <div class="hday">День <b>${S.day}</b> из 60</div>
+      <div class="hseason">Сезон в процессе</div>
+    </div>
     <div class="hbig"><span class="n">${u}</span><span class="of">/ 120</span><span class="lb">карт собрано</span></div>
-    <div class="hbar"><i style="width:${pct.toFixed(1)}%"></i><u style="left:${capPct.toFixed(1)}%"></u></div>
+    <div class="hbar"><i style="width:${pct.toFixed(1)}%"></i></div>
     <div class="hgrid">
       <div><b>${closedDecks()}<span>/12</span></b><span>колод</span></div>
       <div><b>${dubs}</b><span>дублей</span></div>
@@ -3066,28 +3254,12 @@ function renderHero(){
       <div><b>${Math.round(S.coins)}</b><span>монет</span></div>
       <div><b>${S.stars}</b><span>звёзд</span></div>
     </div>
-    <div class="hgift">Сегодня за вход: <b>${gift.join(', ')||'—'}</b>${
-      nextWave?` · волна ${S.wave+2} на ${nextWave}-й день`:' · все волны открыты'}</div>
+    <div class="hgift">Сегодня за вход: <b>${gift.join(', ')||'награда уже получена'}</b></div>
     <div class="hmain">
-      <button class="hplay" onclick="openPvp()" ${bkList().length<3?'disabled':''}>
-        ${bkList().length<3?'Нужно 3 карты':'Играть'}</button>
+      <button class="hplay" onclick="openPvp()" ${bkList().length<pvpNeed?'disabled':''}>
+        ${bkList().length<pvpNeed?`Для PvP нужно ${pvpNeed} карт`:'Играть'}</button>
       <button class="hnext" onclick="nextDayAll(false)" ${S.seasonOver?'disabled':''}>
         ${S.seasonOver?'Сезон завершён':'Следующий день →'}</button>
-    </div>
-    <div class="hswhead">Поведение всех 4 профилей при переходе на новый день</div>
-    <div class="hsw">
-      ${swAuto('pvp','Играть в PvP')}
-      ${AUTO.pvp?`<span class="numsw">${[1,2,3,4,5,10].map(n=>
-        `<button class="${MATCHES_PER_DAY===n?'on':''}" onclick="setMatches(${n})">${n}</button>`).join('')}
-        <em>${MATCHES_PER_DAY} ${plural(MATCHES_PER_DAY,'матч','матча','матчей')} в день</em></span>`:''}
-      ${swAuto('tasks','Выполнять задания')}
-      ${swAuto('qr','Сканировать QR')}
-      ${swAuto('friends','Приглашать друзей')}
-    </div>
-    <div class="hswhead">Анимации</div>
-    <div class="hsw">
-      ${sw('pack','Вскрытие паков')}
-      ${sw('win','Исход раунда')}
     </div>
   </div>`;
 }
@@ -3105,7 +3277,7 @@ function renderHomeColl(){
     <a onclick="showTab('coll')">${uniq()} из 120 · ${closedDecks()} ${plural(closedDecks(),'колода','колоды','колод')} собрано →</a></div>`;
   s+=queueStrip();
   s+='<div class="dgrid">';
-  playerOrder().forEach(d=>{
+  [...Array(12).keys()].forEach(d=>{
     const ids=deckCards(d), have=ids.filter(i=>S.opened[i]).length;
     s+=`<div class="dtile${have===10?' full':''}"><i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b>
       <span>${have}/10</span><u style="width:${have*10}%"></u></div>`;
@@ -3116,18 +3288,17 @@ function renderHomeColl(){
         <span>${OPEN.collFull?'вернуться к сводке':`${uniq()} открыто, ${120-uniq()} осталось`}</span></button>`;
   if(OPEN.collFull){
     s+='<div class="fullcoll">';
-    playerOrder().forEach((d,k)=>{
+    [...Array(12).keys()].forEach((d,k)=>{
       const ids=deckCards(d), have=ids.filter(i=>S.opened[i]).length;
-      const lockedHere=ids.filter(i=>isLocked(i)).length;
       s+=`<div class="fdeck${have===10?' full':''}"><div class="fdh"><span class="fnum">${k+1}</span>
         <i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b>
-        <span class="ftag">${have}/10${have===10?' · собрана':''}${lockedHere?` · в сейфе ${lockedHere}`:''}</span></div>
+        <span class="ftag">${have}/10${have===10?' · собрана':''}</span></div>
         <div class="frow">`;
       ids.forEach(i=>{
         const c=CARDS[i];
-        const cls = S.opened[i] ? `have ${c.rar}` : (isLocked(i)?'safe':'miss');
+        const cls = S.opened[i] ? `have ${c.rar}` : 'miss';
         const cnt = S.copies[i]>1 ? `<u>×${S.copies[i]}</u>` : '';
-        const val = S.opened[i] ? Math.max(...c.st) : (isLocked(i)?'⛔':'—');
+        const val = S.opened[i] ? Math.max(...c.st) : '—';
         s+=`<div class="fc ${cls}" title="${c.name}">
           <i>${S.opened[i]?CFG.emoji[c.deck]:'·'}</i><b>${val}</b>
           <s>${c.name.split(': ')[1]}</s>${cnt}</div>`;
@@ -3189,7 +3360,6 @@ function render(){
   $('hud').innerHTML=`
    <div class="hudrow">
      <span class="pill">День <b>${S.day||'—'}</b> / ${CFG.seasonDays}</span>
-     <span class="pill">Волна <b>${S.wave+1}</b> · потолок <b>${cap()}</b></span>
      <span class="pill">Коллекция <b>${u}</b>/120</span>
      <span class="pill">Колод <b>${closedDecks()}</b>/12</span>
      <span class="pill coin">Монеты <b>${S.coins}</b></span>
@@ -3227,10 +3397,10 @@ function renderBonuses(){
   const total=Object.values(S.bonus||{}).reduce((a,b)=>a+(b||0),0);
   let h=`<h3>Бонус-карты <span class="tag">в запасе ${total}</span></h3>`;
   if(!total){
-    h+=`<p class="muted">Запас пуст. Бонус-карты приходят за вход (дни 3, 5 и 7 цикла), задания, рефералов, QR-код и из бонус-паков в магазине.</p>`;
+    h+=`<p class="muted">Запас пуст. Бонус-карты приходят за вход, задания, рефералов, QR-код, а также из Бонус-пака и Лут-пака за звёзды.</p>`;
     $('bonuses').innerHTML=h; return;
   }
-  h+=`<p class="muted">В матче доступен весь запас. Бонус выбирается вместе с игровой картой до вскрытия соперника. Лимит — 1 бонус на игрока за раунд.</p>`;
+  h+=`<p class="muted">Здесь показан полный запас с количеством экземпляров. В матче каждый тип выводится одной карточкой; после использования этот тип исчезает из выбора до конца матча.</p>`;
   const rows=Object.entries(S.bonus).filter(([i,n])=>n>0)
     .map(([i,n])=>({i:+i,n,...BONUS[+i]}))
     .sort((a,b)=>({L:0,R:1,C:2})[a.rar]-({L:0,R:1,C:2})[b.rar] || a.name.localeCompare(b.name));
@@ -3283,14 +3453,17 @@ function renderPvp(){
   let h=foldHead('pvp','Поединок',`сегодня ${S.matchesToday} ${plural(S.matchesToday,'матч','матча','матчей')}`);
   if(!OPEN.pvp){ $('pvp').innerHTML=h; return; }
   const pvpMin=profilePvpMin();
-  h+=`<p class="muted">Сегодня сыграно ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го — половина, с 9-го — четверть. Соперник подбирается по четырём характеристикам боевой колоды; система выбирает ближайший из кандидатов.${pvpMin?` <b>Профиль 3:</b> весь PvP доступен только при БК ≥ ${pvpMin}; сейчас ${bkList().length}.`:''}</p>`;
+  h+=`<p class="muted">Сегодня сыграно ${S.matchesToday}. Полная награда за первые 5 матчей, с 6-го — половина, с 9-го — четверть.
+    ${pvpMin&&bkList().length<pvpMin?`Для доступа к поединкам нужно минимум ${pvpMin} карт в боевой колоде. Сейчас: ${bkList().length}.`:''}</p>`;
   h+='<div class="modes">';
   Object.entries(CFG.modes).forEach(([k,m])=>{
     const ok=av.includes(k)&&!M&&bkList().length>=m.cards;
+    const lockedByBk=pvpMin&&bkList().length<pvpMin;
     h+=`<button class="mcard" onclick="startMatch('${k}')" ${ok?'':'disabled'}>
       <i>${icon[k]}</i>
-      <span><b>${m.name}</b><span>${m.cards} ${plural(m.cards,'карта','карты','карт')} в руке · ${m.cards} ${plural(m.cards,'раунд','раунда','раундов')}</span></span>
-      <u>${ok?`+${m.win} монет`:(pvpMin&&bkList().length<pvpMin?`БК ≥ ${pvpMin}`:`нужно ${m.access} карт`)}<s>${ok?`ничья ${m.draw} · проигрыш ${m.lose}`:(pvpMin&&bkList().length<pvpMin?'PvP временно закрыт':'ещё закрыт')}</s></u></button>`;
+      <span class="mcopy"><b>${m.name}</b><span>${m.cards} ${plural(m.cards,'карта','карты','карт')} в руке · ${m.cards} ${plural(m.cards,'раунд','раунда','раундов')}</span></span>
+      <u>${ok?`+${m.win} монет`:(lockedByBk?`Нужно ${pvpMin} карт в БК`:`Нужно ${m.access} карт`)}
+      <s>${ok?`ничья ${m.draw} · проигрыш ${m.lose}`:(lockedByBk?'поединки ещё недоступны':'режим ещё закрыт')}</s></u></button>`;
   });
   h+='</div>';
   $('pvp').innerHTML=h;
@@ -3359,33 +3532,29 @@ function applicableBonuses(list){
   return list.filter(b=>b.g>0||b.type==='cancel'||b.type==='shield'||b.type==='swap');
 }
 function bonusStrip(list, handler, selected){
-  if(!list.length) return '<div class="ghelp">Бонус-карт в запасе нет.</div>';
+  if(!list.length) return '<div class="ghelp">Доступных бонус-карт на этот матч больше нет.</div>';
 
-  const used=new Set((M&&M.usedBonusTypes)||[]);
-  const applicable=applicableBonuses(list).filter(b=>!used.has(b.i));
+  const applicable=applicableBonuses(list);
   const applicableIds=new Set(applicable.map(b=>b.i));
   const bestId=applicable.length ? applicable[0].i : null;
 
   let s='<div class="gbonus">';
   list.forEach((b)=>{
-    const alreadyUsed=used.has(b.i);
     const fits=applicableIds.has(b.i);
-    const best=b.i===bestId && !alreadyUsed;
+    const best=b.i===bestId;
     const cls=[
       b.rar,
       fits?'fit':'',
       b.decides?'decides':'',
       best?'best':'',
-      alreadyUsed?'used':'',
       selected===b.i?'sel':''
     ].filter(Boolean).join(' ');
 
     const note=b.decides ? ' · переворачивает раунд' : '';
     const hold=!b.decides && b.rar==='L' ? ' · редкая тактика' : '';
-    const usedNote=alreadyUsed ? ' · уже использована в этом матче' : '';
 
-    s+=`<button class="bchip ${cls}" onclick="${handler}(${b.i})" ${alreadyUsed?'disabled':''}>
-      ${best?'<u>лучший сейчас</u>':''}${b.name}<em>${b.desc}${note}${hold}${usedNote}</em></button>`;
+    s+=`<button class="bchip ${cls}" onclick="${handler}(${b.i})">
+      ${best?'<u>лучший сейчас</u>':''}${b.name}<em>${b.desc}${note}${hold}</em></button>`;
   });
   return s+'</div>';
 }
@@ -3483,20 +3652,38 @@ function renderMatch(){
     <div class="opstack"><div class="gback"></div><div class="gback"></div><div class="gback"></div><span class="stackcount">×${M.botHand.length}</span></div>
   </div></div>`;
 
+  const slotBonus=(idx)=>{
+    if(idx===null||idx===undefined||!BONUS[idx]) return '';
+    const b=BONUS[idx];
+    return `<div class="slotbonus ${b.rar}">
+      <span>Бонус</span><b>${b.name}</b><em>${b.desc}</em>
+    </div>`;
+  };
+
   const slotCard=(side)=>{
     const mine=side==='me';
     if(BR){
       const cid=mine?BR.myCard:BR.botCard;
+      const bonusIdx=mine?BR.myBonusIdx:BR.botBonusIdx;
       const result=BR.res==='draw'?'draw':((mine&&BR.res==='win')||(!mine&&BR.res==='lose')?'win':'lose');
-      return `<span class="slotresult ${result}">${result==='win'?'выиграл':(result==='lose'?'проиграл':'ничья')}</span><div class="slotopen">${battleCardHTML(cid,{mode:'flat',hotStat:BR.statIdx})}</div>`;
+      return `<span class="slotresult ${result}">${result==='win'?'выиграл':(result==='lose'?'проиграл':'ничья')}</span>
+        <div class="slotopen">
+          <div class="slotduo ${bonusIdx===null||bonusIdx===undefined?'solo':'withbonus'}">
+            <div class="slotmain">${battleCardHTML(cid,{mode:'flat',hotStat:BR.statIdx})}</div>
+            ${slotBonus(bonusIdx)}
+          </div>
+        </div>`;
     }
     if(selected) return `<div class="slotback"></div>`;
     return `<div class="slotempty">${mine?'Ваша карта':'Карта соперника'}<br><span>появится здесь</span></div>`;
   };
 
   h+=`<div class="playboard">
+    <div class="boardmid">
+      <div class="roundstat"><span>Играем по</span><b>${shownStat===null||shownStat===undefined?'выберите':CFG.statNames[shownStat]}</b></div>
+      <div class="versus">СРАВНЕНИЕ КАРТ</div>
+    </div>
     <div class="playslot op"><span class="slotlabel">Соперник</span>${slotCard('op')}</div>
-    <div class="boardmid"><div class="roundstat"><span>Играем по</span><b>${shownStat===null||shownStat===undefined?'выберите':CFG.statNames[shownStat]}</b></div><div class="versus">VS</div></div>
     <div class="playslot me"><span class="slotlabel">Вы</span>${slotCard('me')}</div>
   </div>`;
 
@@ -3518,7 +3705,6 @@ function renderMatch(){
       ? `Соперник выбрал <b>${CFG.statNames[M.pendingStat]}</b>. Пролистайте руку и выберите карту.`
       : 'Ваш ход: пролистайте руку, выберите карту и характеристику.'}</div>`;
 
-  // Вся рука отображается всегда. Подходящие карты по текущей характеристике подсвечиваются.
   const st=answering?M.pendingStat:(selected?M.myStat:null);
   const hand=[...M.myHand].sort((a,b)=> st!==null&&st!==undefined
       ? CARDS[b].st[st]-CARDS[a].st[st]
@@ -3538,20 +3724,19 @@ function renderMatch(){
       })}
     </div>`;
   });
-  h+=`</div><div class="carouselhint">Лучшая карта всегда первая слева · смахивайте веер влево/вправо</div>`;
+  h+=`</div><div class="carouselhint">Лучшая карта отмечена отдельно · смахивайте веер влево/вправо</div>`;
 
   if(selected){
     const c=CARDS[M.myCard];
     const ranked=bonusRanked(M.myStat,M.myCard);
-    const applicable=applicableBonuses(ranked);
     const decisionDone=M.bonusDecision!=='pending';
 
     h+=`<div class="gask mine"><b>Выбрано:</b> ${c.name} · ${CFG.statNames[M.myStat]} <b>${c.st[M.myStat]}</b></div>`;
     h+=`<div class="bonusdecision ${decisionDone?'done':'pending'}">
-      <div class="bdtitle">Бонус-карта · 1 на раунд</div>
+      <div class="bdtitle">Бонус-карта · не больше одной за раунд</div>
       <div class="bdsub">${ranked.length
-        ? 'Показаны все типы бонус-карт по одной карточке без коэффициента количества. Подходящие подсвечены. Каждый тип можно использовать только один раз за матч.'
-        : 'Бонус-карт в запасе нет — играем без бонуса.'}</div>`;
+        ? 'Показаны все бонус-карты, которые ещё можно использовать в этом матче. Подходящие подсвечены, но выбрать можно любую.'
+        : 'Доступных бонус-карт на этот матч больше нет.'}</div>`;
     if(ranked.length){
       h+=bonusStrip(ranked,'chooseMyBonus',M.myBonus);
       h+=`<div class="bonusactions">
@@ -3566,7 +3751,7 @@ function renderMatch(){
       M.myBonus!==null?'Сыграть с «'+BONUS[M.myBonus].name+'»':'Сыграть ход'
     } →</button>`;
   } else {
-    h+=`<div class="ghelp">Выберите карту${answering?'':' и характеристику'}. После этого игра покажет все подходящие бонус-карты.</div>`;
+    h+=`<div class="ghelp">Выберите карту${answering?'':' и характеристику'}. После этого можно выбрать бонус.</div>`;
   }
 
   if(M.history && M.history.length){
@@ -3586,46 +3771,29 @@ function quitMatch(){ stopTurnTimer(); M=null; $('match').style.display='none'; 
 // Сейф закрывает карты только в последней шестёрке ЭТОЙ очереди и открывает их
 // строго по ней же — ближайшая колода освобождается первой.
 function queueStrip(){
-  const ord=playerOrder();
-  const prio=ord.filter(d=>!deckClosed(d))[0];
-  const lockedByDeck={};
-  safeLocked().forEach(id=>{ const d=CARDS[id].deck; lockedByDeck[d]=(lockedByDeck[d]||0)+1; });
-  let s=`<div class="qbox"><div class="qhead">Ваша очередь сбора<em>первые 6 случайные · хвост фиксирован</em></div><div class="qrow">`;
-  ord.forEach((d,k)=>{
-    const have=deckCards(d).filter(i=>S.opened[i]).length;
-    const closed=have===10;
-    const lk=lockedByDeck[d]||0;
-    s+=`<div class="qchip${closed?' done':''}${d===prio?' prio':''}${lk?' safe':''}">
-      <span class="qnum">${k+1}</span><i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b>
-      <span>${closed?'собрана':have+'/10'}</span>${lk?`<u>сейф ${lk}</u>`:''}</div>`;
-  });
-  s+=`</div><div class="qnote">
-    Приоритетная колода — первая несобранная в очереди, сейчас <b>${CFG.animals[prio]}</b>:
-    она получает обычный вес лестницы плюс форс каждой ${TUNE.firstForceEvery||2}-й новой карты. После её закрытия, если вторая колода ещё не собрана, каждая ${TUNE.secondForceEvery||3}-я новая карта форсится во вторую. Если вторая уже собрана — дальше только обычные шансы.
-    Сейф держит ${safeLocked().length} ${plural(safeLocked().length,'карту','карты','карт')} в фиксированном хвосте
-    и снимается по схеме 10 → 9 → 8 → 7 → 6 → 5 → 4 → 3 → 2 → 0.
-    Порядок плиток в коллекции ниже обычный и от очереди не зависит.</div></div>`;
-  return s;
+  return `<div class="qbox userprogress">
+    <div class="qhead">Собирайте все 12 колод</div>
+    <div class="qnote">Карты разных зверей появляются по мере игры. Не все карты обязательно доступны одновременно — продолжайте выполнять задания, открывать паки и играть.</div>
+  </div>`;
 }
 function renderCollection(){
   let h=`<h3>Коллекция <span class="tag">${uniq()}/120 · экземпляров ${S.copies.reduce((a,b)=>a+b,0)}</span></h3>`;
   const own=ownedCards().length, need=bkNeedsPick();
-  h+=`<p class="muted">Боевая колода: ${bkList().length} из ${CFG.bkSize}. ${need?`Карт на руках ${own} — больше 50, поэтому колоду собираете вручную: отмечайте карты значком ✓. Отмечено ${S.bkPicked.length} из 50, остальные добираются по порядку коллекции.`:`Карт на руках ${own} — все входят в боевую колоду автоматически.`}</p>`;
+  h+=`<p class="muted">Боевая колода: ${bkList().length} из ${CFG.bkSize}. ${need
+    ? `Карт на руках ${own} — больше 50, поэтому состав боевой колоды можно выбрать вручную. Отмечено ${S.bkPicked.length} из 50.`
+    : `Карт на руках ${own} — все доступные карты автоматически входят в боевую колоду.`}</p>`;
   h+=queueStrip();
-  h+=`<p class="muted">Сейф: ${safeLocked().length} фиксированных карт выведено из оборота в хвостовых колодах. Снятие: 10 → 9 → 8 → 7 → 6 → 5 → 4 → 3 → 2 → 0.</p>`;
-  h+=`<p class="muted">Блокировка: карта в слоте не участвует в матчах и не может быть потеряна. Слотов куплено ${S.slots}/5, занято ${S.blocked.length}.
+  h+=`<p class="muted">Блокировка защищает карту от участия в матчах и потери. Слотов куплено ${S.slots}/5, занято ${S.blocked.length}.
      ${S.slots<5?`<button onclick="buySlot()">Купить слот ${S.slots+1} за ${CFG.slotPrices[S.slots]} монет</button>`:''}</p>`;
   for(let d=0;d<12;d++){
     const ids=deckCards(d), have=ids.filter(i=>S.opened[i]).length;
-    const openRank=playerOrder().filter(x=>!deckClosed(x)).indexOf(d);
-    const lockedHere=deckCards(d).filter(i=>isLocked(i)).length;
-    const nOpenNow=playerOrder().filter(x=>!deckClosed(x)).length;
-    const prio = openRank>=0 ? ` · в очереди выдачи ${openRank+1}-я (${Math.round(ladderRankWeight(openRank, nOpenNow)*100)}%)` : '';
-    h+=`<div class="deck ${have===10?'full':''}"><div class="dh"><b>${CFG.animals[d]}</b> <span class="tag">${have}/10${have===10?' · собрана':''}${prio}${lockedHere?` · в сейфе ${lockedHere}`:''}</span></div><div class="cards">`;
+    h+=`<div class="deck ${have===10?'full':''}"><div class="dh"><b>${CFG.animals[d]}</b>
+      <span class="tag">${have}/10${have===10?' · собрана':''}</span></div><div class="cards">`;
     ids.forEach(i=>{
       const blocked=S.blocked.includes(i);
-      let btn=S.opened[i]?`<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`
-                         :(isLocked(i)?`<span class="lock" title="Карта в сейфе: выйдет в оборот на следующих волнах">⛔</span>`:'');
+      let btn=S.opened[i]
+        ? `<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`
+        : '';
       if(need && S.copies[i]>0 && !blocked){
         const on=S.bkPicked.includes(i);
         btn+=`<button class="bkpick ${on?'on':''}" onclick="toggleBk(${i})">${on?'✓':'+'}</button>`;
@@ -3637,33 +3805,28 @@ function renderCollection(){
   $('collection').innerHTML=h;
 }
 function renderShop(){
-  let h='<h3>Паки за звёзды</h3><div class="row">';
-  const atCap = uniq()>=cap();
+  let h='<h3>Паки за звёзды</h3><div class="row packrow">';
   CFG.packs.forEach(p=>{
-    let sub = p.guarantee==='new'?'минимум 1 новая':(p.guarantee==='rare'?'1 гарантированная редкая':'без гарантии');
-    if(p.guarantee==='new' && atCap) sub='новых из паков пока нет · +2 бонус-карты';
+    let sub='';
+    if(p.id==='std') sub='5 случайных основных карт';
+    if(p.id==='bonus') sub='4 случайные основные карты + 1 гарантированная бонус-карта';
+    if(p.id==='epic') sub='5 основных карт · 1 новая карта, если среди доступных есть ещё не собранные';
+    if(p.id==='loot') sub='5 основных карт · до 2 новых, если они доступны · +1 гарантированная бонус-карта';
     h+=`<button class="mode" onclick="buyPack('${p.id}')" ${S.stars>=p.price?'':'disabled'}>
-      <b>${p.name}</b><span>${p.price}★ · ${p.bonus?p.bonus+' бонус-карт':p.cards+' карт'}</span><span class="muted">${sub}</span></button>`;
+      <b>${p.name}</b><span>${p.price}★</span><span class="muted">${sub}</span></button>`;
   });
   const w=shopWeek();
   h+=`</div><h3>Витрина <span class="weekpill">неделя ${w}/8</span></h3>
-    <p class="muted"><b>Финальная сетка B.</b> 2 440 цифровых призов, из них ровно 500 000 Robux. Каждую неделю добавляется новая партия, остаток переносится. Лимит — 1 экземпляр каждой позиции на аккаунт за сезон. Чужие покупки в этой одиночной демке общий фонд не списывают.</p><div class="shopgrid">`;
+    <p class="muted">Призы обновляются каждую неделю, а оставшиеся позиции переносятся дальше. Один приз каждого вида можно получить один раз за сезон.</p><div class="shopgrid">`;
   CFG.shop.forEach(p=>{
     const got=(S.prizes[p.id]||0)>=1, locked=(p.unlockWeek||1)>w, rem=prizeRemaining(p);
     const disabled=got||locked||rem<=0||S.coins<p.price;
     h+=`<button class="prize ${got?'got':''} ${locked?'locked':''}" onclick="buyPrize('${p.id}')" ${disabled?'disabled':''}>
       <b>${p.name}</b><div class="price">${p.price} монет</div>
-      <small>${got?'Уже куплено':(locked?`Откроется на ${p.unlockWeek}-й неделе`:`Выложено к этой неделе: ${prizeReleased(p)} · ваш доступный остаток: ${rem}`)}</small>
+      <small>${got?'Уже получено':(locked?`Станет доступно на ${p.unlockWeek}-й неделе`:`Доступно сейчас: ${rem}`)}</small>
       <small>${p.type}</small></button>`;
   });
   h+='</div>';
-  h+=`<details style="margin-top:10px"><summary class="fullbtn" style="list-style:none;cursor:pointer">План выкладки на 8 недель
-      <span>вся разбивка из финальной таблицы витрины</span></summary><div class="storeplan" style="margin-top:8px"><table>
-      <tr><th>Приз</th>${Array.from({length:8},(_,i)=>`<th>Н${i+1}</th>`).join('')}<th>Всего</th></tr>`;
-  CFG.shop.forEach(p=>{
-    h+=`<tr><td>${p.name}</td>${p.stockByWeek.map(x=>`<td>${x}</td>`).join('')}<td><b>${p.stockByWeek.reduce((a,b)=>a+b,0)}</b></td></tr>`;
-  });
-  h+=`</table></div></details>`;
   const own=bonusOwnedList();
   h+=`<h3>Бонус-карты <span class="tag">${own.reduce((a,b)=>a+b.n,0)} шт.</span></h3><div class="bonuslist">`;
   own.sort((a,b)=>({C:0,R:1,L:2})[b.rar]-({C:0,R:1,L:2})[a.rar]);
@@ -3784,21 +3947,18 @@ function renderStats(){
 }
 function renderRules(){
   const st=TUNE.ladderSteps;
-  $('rules').innerHTML=`<h3>Актуальные правила модели</h3><div class="muted" style="line-height:1.7">
-  <b>Волны.</b> 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120 новых карт из паков. Дни 1 / 2 / 4 / 7 / 11 / 16 / 22 / 29 / 37 / 46. PvP может принести новую карту сверх пакетного потолка.<br><br>
-  <b>Очередь.</b> Первые 6 колод случайные: Заяц, Рысь, Барсук, Ёж, Ласка, Белка. Хвост фиксирован: Сова → Олень → Волк → Бобр → Медведь → Лис. Первая колода ускоряется каждой ${TUNE.firstForceEvery||2}-й новой картой и не закрывается раньше ${TUNE.firstDeckMinDay||3}-го дня; после неё вторая — каждой ${TUNE.secondForceEvery||3}-й, только если ещё не собрана.<br><br>
-  <b>Сейф.</b> Фиксированные 10 карт в хвосте. Снятие по волнам: 10 / 9 / 8 / 7 / 6 / 5 / 4 / 3 / 2 / 0; последние две карты Лиса выходят на финальной волне.<br><br>
-  <b>Выдача.</b> Новизна ${Math.round(TUNE.noveltyStart*100)} / ${Math.round(TUNE.novelty30*100)} / ${Math.round(TUNE.novelty60*100)} / ${Math.round(TUNE.novelty85*100)}%. Для новой карты сначала работают стартовый приоритет и специальные шаги профиля, затем лестница (${st.map(s=>Math.round(s.share*100)+'%').join(' / ')}). Дубли по редкости 70 / 20 / 10.<br><br>
-  <b>Дубли и звёзды.</b> Дубль даёт физический экземпляр и +1 / 2 / 3★. Потеря именно дубля в PvP уменьшает звёзды на его стоимость. Покупка пака за звёзды физически сжигает соответствующие дубли — двойной выгоды нет.<br><br>
-  <b>PvP.</b> Базовый доступ 5 / 15 / 30 уникальных карт; матч 3 / 5 / 7 раундов. В профиле 3 поверх этого действует дополнительный порог: любой PvP доступен только при БК ≥ 10. Монетка задаёт первого называющего, дальше базовое право строго чередуется. Отвечающий видит названную характеристику. Проигрыш раунда отдаёт физический экземпляр; история коллекции остаётся открытой.<br><br>
-  <b>Матчмейкинг.</b> Сравнивается не только редкость: бот выбирается по 4-компонентному профилю силы текущей боевой колоды. Боевая колода — максимум 50 физических незаблокированных карт.<br><br>
-  <b>Награда PvP.</b> 1–5 матчей в сутки — 100%, 6–8 — 50%, с 9-го и дальше — 25% без возврата к полной награде. Та же кривая действует на рейтинг.<br><br>
-  <b>Задания.</b> Daily-счётчики живут только текущий день. Weekly-действия считаются только внутри своей недели; состояние коллекции (например 48 карт) проверяется глобально.<br><br>
-  <b>Бонус-карты.</b> 34 вида: 20 обычных / 12 редких / 2 легендарные. Универсальные ±8 / ±15 / ±25, адресные ±18 / ±25 / ±35 по четырём характеристикам. Щит и Отмена — редкие; Подмена и Ярость — легендарные. Бонус выбирается вместе с основной картой до вскрытия соперника. Ярость ×1,6 работает на сравниваемой характеристике карты любой редкости.<br><br>
-  <b>Паки за звёзды.</b> Только карточные: Стандартный 35★ / Эпик 60★ / Лут 90★. Отдельного бонус-пака за звёзды в актуальном балансе нет.<br><br>
-  <b>Витрина.</b> 2 440 цифровых призов: 1 416×100 Robux, 400×500 Robux, 144×1 100 Robux, 240×сертификат 1 000 ₽, 152×3 000 ₽, 88×5 000 ₽. Robux суммарно 500 000. Сетка B: 750 / 1 900 / 2 300 / 3 100 / 4 400 / 6 000 монет; полный выкуп изымает 4 017 200 монет. Партии добавляются еженедельно и переносятся; 1 приз каждого вида на аккаунт. Сертификат 5 000 ₽ открывается с 4-й недели.<br><br>
-  <b>Характеристики.</b> Используется фиксированная таблица 120 карт; значения не генерируются и не округляются.
-  </div>`;
+  $('rules').innerHTML=`<details class="devrules">
+    <summary class="fullbtn">Служебные правила модели <span>для разработки · игроку не показываются</span></summary>
+    <div class="muted devrulesbody">
+      <b>Волны.</b> 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120 новых карт из паков. Дни 1 / 2 / 4 / 7 / 11 / 16 / 22 / 29 / 37 / 46.<br><br>
+      <b>Очередь.</b> Первые 6 колод случайные, последние 6 фиксированы. Первая колода ускоряется каждой ${TUNE.firstForceEvery||2}-й новой картой; после неё вторая — каждой ${TUNE.secondForceEvery||3}-й, если ещё не собрана.<br><br>
+      <b>Сейф.</b> Фиксированные 10 карт в хвосте. Снятие по волнам: 10 / 9 / 8 / 7 / 6 / 5 / 4 / 3 / 2 / 0.<br><br>
+      <b>Выдача.</b> Новизна ${Math.round(TUNE.noveltyStart*100)} / ${Math.round(TUNE.novelty30*100)} / ${Math.round(TUNE.novelty60*100)} / ${Math.round(TUNE.novelty85*100)}%. Лестница: ${st.map(s=>Math.round(s.share*100)+'%').join(' / ')}. Дубли по редкости 70 / 20 / 10.<br><br>
+      <b>PvP.</b> Базовый доступ 5 / 15 / 30 уникальных карт; профиль 3 имеет дополнительный порог БК ≥10. Матч 3 / 5 / 7 раундов.<br><br>
+      <b>Бонус-карты.</b> 34 вида. Один тип можно использовать не более одного раза за матч. Ярость ×1,6 работает на карте любой редкости.<br><br>
+      <b>Паки за звёзды.</b> 35★ / 45★ / 60★ / 90★. Epic/Loot гарантируют новые карты только внутри текущего доступного пула и не обходят сейф/ограничения прогресса.
+    </div>
+  </details>`;
 }
 function renderLog(){
   if(S.day===0){ $('log').innerHTML=''; return; }
