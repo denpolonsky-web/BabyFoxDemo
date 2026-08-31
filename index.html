@@ -1199,7 +1199,7 @@ h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
 }
 
 
-/* ===== six profiles + comparison statistics ===== */
+/* ===== four profiles + comparison statistics ===== */
 .tabbar .tab{min-width:0;padding-left:3px;padding-right:3px}
 .tabbar .tab span{font-size:9px}
 .ptrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
@@ -2560,8 +2560,8 @@ function newState(){
   };
 }
 /* ================= ВАРИАНТЫ (ПРОФИЛИ) =================
-   Три профиля × два набора порогов новизны = 6 коллекций.
-   Все шесть вариантов живут параллельно: день, задания и паки применяются одновременно
+   Два профиля × два набора порогов новизны = 4 коллекции.
+   Все четыре варианта живут параллельно: день, задания и паки применяются одновременно
    ко всем, поэтому их можно честно сравнивать между собой.               */
 const LADDER_COMMON=[{count:1,share:0.40},{count:5,share:0.25},{count:99,share:0.35}];
 const NOVELTY_A={noveltyStart:0.97, novelty30:0.76, novelty60:0.56, novelty85:0.32};
@@ -2574,20 +2574,17 @@ const NOV_TITLE={ A:'Вариант А — больше уникальных к�
 const NOV_NUM={ A:'0,97 / 0,76 / 0,56 / 0,32', B:'0,85 / 0,65 / 0,45 / 0,25' };
 const PROFILE_DESC={
   1:'Каждая 3-я карта распределяется случайно по всей коллекции — карты падают отовсюду, включая дальние колоды.',
-  2:'Каждая 3-я карта заполняет самую пустую колоду — отстающие колоды подтягиваются автоматически, ничего не застревает.',
-  3:'Выдача полностью повторяет профиль 2. Допуск к PvP зависит от запаса боевой колоды: Экспресс — от 5, Классика — от 10, Профи — от 15 карт.'
+  2:'Каждая 3-я карта заполняет самую пустую колоду — отстающие колоды подтягиваются автоматически, ничего не застревает.'
 };
 const MECH={
   1:'Каждая 3-я карта случайная равномерно по всей коллекции',
-  2:'Каждая 3-я карта компенсирует самую пустую колоду',
-  3:'Как профиль 2 + пороги БК 5 / 10 / 15'
+  2:'Каждая 3-я карта компенсирует самую пустую колоду'
 };
 const NOV_SHORT={ A:'больше уникальных карт', B:'больше дублей' };
 
 const PROFILE_TOP={
   1:'каждая 3-я карта распределяется случайно по коллекции',
-  2:'каждая 3-я карта подтягивает самую пустую колоду',
-  3:'пустые колоды подтягиваются · PvP по БК 5 / 10 / 15'
+  2:'каждая 3-я карта подтягивает самую пустую колоду'
 };
 
 const VARIANTS=[
@@ -2595,13 +2592,10 @@ const VARIANTS=[
   {id:'1B', prof:1, nov:'B', name:MECH[1], sub:NOV_SHORT.B},
   {id:'2A', prof:2, nov:'A', name:MECH[2], sub:NOV_SHORT.A},
   {id:'2B', prof:2, nov:'B', name:MECH[2], sub:NOV_SHORT.B},
-  {id:'3A', prof:3, nov:'A', name:MECH[3], sub:NOV_SHORT.A},
-  {id:'3B', prof:3, nov:'B', name:MECH[3], sub:NOV_SHORT.B},
 ];
 const PROFILE_NAME={
   1:'Колоды заполняются — каждая 3-я карта распределяется случайно по всей коллекции',
-  2:'Колоды заполняются — пустые колоды заполняются автоматически: каждая 3-я карта заполняет самые пустые колоды',
-  3:'Та же компенсация пустых колод, что у профиля 2, но с порогами входа в PvP по БК: 5 / 10 / 15'
+  2:'Колоды заполняются — пустые колоды заполняются автоматически: каждая 3-я карта заполняет самые пустые колоды'
 };
 function variantTune(v){
   const nov = v.nov==='A'?NOVELTY_A:NOVELTY_B;
@@ -2609,7 +2603,7 @@ function variantTune(v){
     ladderSteps: JSON.parse(JSON.stringify(LADDER_COMMON)),
     decay: 0.75,
     randomEveryN: v.prof===1 ? 3 : 0,     // профиль 1: случайная раскладка
-    fillEveryN:   (v.prof===2||v.prof===3) ? 3 : 0, // профили 2/3: заполнение самой пустой
+    fillEveryN:   v.prof===2 ? 3 : 0, // профиль 2: заполнение самой пустой
     fillMinGap: 0,
     firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 3,   // первая быстрее, вторая — с прежней интенсивностью
     finishLe2:1.0, finishLe4:1.0,
@@ -3046,13 +3040,15 @@ function useSlot(i){
 function storeSlot(i){ SLOTS[i].S=S; SLOTS[i].tune=JSON.parse(JSON.stringify(TUNE)); }
 function initSlots(){
   SLOTS=VARIANTS.map(v=>({v, tune:variantTune(v), S:null}));
-  // Каждый вариант моделирует отдельного игрока, поэтому у 1A / 1B / 2A / 2B / 3A / 3B
+  // Каждый вариант моделирует отдельного игрока, поэтому у 1A / 1B / 2A / 2B
   // своя независимая случайная последовательность первых шести колод.
   // Последние шесть колод фиксированы для всех: Сова → Олень → Волк → Бобр → Медведь → Лис.
   SLOTS.forEach(sl=>{ S=newState(); sl.S=S; });
   useSlot(0); M=null;
 }
-function switchTo(i){ storeSlot(ACTIVE); M=null; useSlot(i); render();
+function switchTo(i){
+  if(i<0 || i>=SLOTS.length) return;
+  storeSlot(ACTIVE); M=null; useSlot(i); render();
   // панель параметров живёт отдельно от render() — перерисовываем её,
   // иначе в полях остаются значения предыдущего варианта
   if($('tunepanel').style.display!=='none') renderTune();
@@ -3304,8 +3300,8 @@ function nextDayAll(autoActive){
     useSlot(i);
     if(S.seasonOver) return;
     const isActive = (i===cur);
-    // ГЛОБАЛЬНЫЕ настройки поведения одинаковы для всех шести вариантов.
-    // Если пользователь выключил PvP / задания / QR / друзей, это выключается во всех 6 вариантах.
+    // ГЛОБАЛЬНЫЕ настройки поведения одинаковы для всех четырёх вариантов.
+    // Если пользователь выключил PvP / задания / QR / друзей, это выключается во всех 4 вариантах.
     CAPTURE = isActive && MODE==='play';
     nextDay();
     const doTasks  = AUTO.tasks;
@@ -3434,8 +3430,7 @@ function botCollection(myUniq,mm,myBkSize,handSize){
   return buildBotOpponent(myUniq,myBkSize,handSize).bkIds;
 }
 function profileModeBkMin(modeKey){
-  if(!(SLOTS[ACTIVE] && SLOTS[ACTIVE].v.prof===3)) return 0;
-  return ({exp:5, cls:10, pro:15})[modeKey] || 0;
+  return ({exp:3, cls:5, pro:7})[modeKey] || 0;
 }
 function pvpGateOk(){
   return availableModes().length>0;
@@ -3532,7 +3527,7 @@ function startMatch(modeKey){
   const bkMin=profileModeBkMin(modeKey);
 
   if(bkMin && bk.length<bkMin){
-    log(`Для режима ${m.name} нужно минимум ${bkMin} карт в боевой колоде`,'warn'); render(); return;
+    log(`Для режима ${m.name} нужно минимум ${bkMin} карт на руках`,'warn'); render(); return;
   }
   if(bk.length<m.cards){
     log(`Для режима ${m.name} нужно минимум ${m.cards} карт в боевой колоде`,'warn'); render(); return;
@@ -4024,7 +4019,7 @@ function renderProfiles(){
     let cl=0; for(let d=0;d<12;d++){ const ids=CARDS.filter(c=>c.deck===d).map(c=>c.id); if(ids.every(x=>st.opened[x])) cl++; }
     return {u,cl}; };
   let t='<div class="ptrow">';
-  [1,2,3].forEach(p=>{
+  [1,2].forEach(p=>{
     const on = cur.v.prof===p;
     const idx = SLOTS.findIndex(sl=>sl.v.prof===p && sl.v.nov===cur.v.nov);
     t+=`<button class="ptab ${on?'on':''}" onclick="switchTo(${idx})">
@@ -4044,21 +4039,21 @@ function renderProfiles(){
   h+=`<div class="pdesc"><b>Профиль ${cur.v.prof} — ${MECH[cur.v.prof]}.</b><br>
       ${PROFILE_DESC[cur.v.prof]}<br>
       <b>${NOV_TITLE[cur.v.nov]}</b> (пороги новизны ${NOV_NUM[cur.v.nov]}): ${NOV_DESC[cur.v.nov]}<br>
-      <span style="color:var(--muted)">День проживается одновременно во всех шести коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Профили 1 и 2 не имеют дополнительного порога БК: режим открывается по коллекции 5 / 15 / 30 и требует только руку 3 / 5 / 7. Профиль 3 дополнительно требует БК 5 / 10 / 15.</span></div>`;
+      <span style="color:var(--muted)">День проживается одновременно во всех четырёх коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Для профилей 1 и 2 режим открывается по коллекции 5 / 15 / 30 уникальных карт и дополнительно требует 3 / 5 / 7 карт на руках.</span></div>`;
 
   const ladder=(TUNE.ladderSteps||[]).map(x=>`${x.count}:${Math.round(x.share*100)}%`).join(' · ');
-  const pvpGate=cur.v.prof===3?'5 / 10 / 15':'без доп. порога БК';
+  const pvpGate='уникальные 5 / 15 / 30 + на руках 3 / 5 / 7';
   h+=`<div class="profileparams">
     <div><span>Активный</span><b>${cur.v.id}</b></div>
     <div><span>Новизна</span><b>${NOV_NUM[cur.v.nov]}</b></div>
-    <div><span>Механика 3-й карты</span><b>${cur.v.prof===1?'случайная':((cur.v.prof===2||cur.v.prof===3)?'в самую пустую':'—')}</b></div>
+    <div><span>Механика 3-й карты</span><b>${cur.v.prof===1?'случайная':(cur.v.prof===2?'в самую пустую':'—')}</b></div>
     <div><span>PvP-порог БК</span><b>${pvpGate}</b></div>
     <div><span>Лестница</span><b>${ladder}</b></div>
     <div><span>Дубли C / R / L</span><b>${Math.round(TUNE.dupC*100)} / ${Math.round(TUNE.dupR*100)} / ${Math.round(TUNE.dupL*100)}%</b></div>
   </div>`;
   // тумблеры автопрогона
   h+=`<div class="autorow">
-    <span class="muted">Что делают все 6 вариантов каждый день:</span>
+    <span class="muted">Что делают все 4 варианта каждый день:</span>
     <button class="tgl ${AUTO.tasks?'on':''}" onclick="toggleAuto('tasks')">Выполнять задания: ${AUTO.tasks?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.qr?'on':''}" onclick="toggleAuto('qr')">Сканировать 1 QR в день: ${AUTO.qr?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.pvp?'on':''}" onclick="toggleAuto('pvp')">Играть PvP: ${AUTO.pvp?'ДА ('+MATCHES_PER_DAY+' матча)':'НЕТ'}</button>
@@ -4071,13 +4066,13 @@ function renderProfiles(){
     <input class="tnum" type="text" inputmode="numeric" value="${MATCHES_PER_DAY}" style="width:48px"
            onchange="setMatches(this.value)">
   </div>
-  <div class="muted" style="font-size:12px;margin-top:4px"><b>Режим игры</b> — активный вариант вы ведёте руками, пять остальных живут на автоигроке. <b>Режим сравнения</b> — все шесть вариантов проходят день автоматически с одинаковыми настройками, это честное сравнение правил выдачи.<br>
-  Настройки поведения глобальные и действуют сразу на 1A, 1B, 2A, 2B, 3A и 3B. Выключили PvP — ни один профиль не играет; то же самое для заданий, QR и друзей.</div>`;
+  <div class="muted" style="font-size:12px;margin-top:4px"><b>Режим игры</b> — активный вариант вы ведёте руками, три остальных живут на автоигроке. <b>Режим сравнения</b> — все четыре варианта проходят день автоматически с одинаковыми настройками, это честное сравнение правил выдачи.<br>
+  Настройки поведения глобальные и действуют сразу на 1A, 1B, 2A и 2B. Выключили PvP — ни один профиль не играет; то же самое для заданий, QR и друзей.</div>`;
   // Полная сравнительная сводка по всем 6 пользователям.
   // «Физ. карт» = сумма всех экземпляров на руках, включая дубли.
   // «БК» = сколько уникальных физических карт сейчас реально доступно для боя
   // с учётом блокировок и лимита боевой колоды 50 карт.
-  h+=`<h3 style="margin-top:16px">Все 6 вариантов <span class="tag">текущее состояние</span></h3>
+  h+=`<h3 style="margin-top:16px">Все 4 варианта <span class="tag">текущее состояние</span></h3>
       <div class="muted" style="margin-bottom:6px">Физ. карт — все экземпляры на руках, включая дубли. БК — карты, доступные для PvP прямо сейчас.</div>
       <div class="usercards">`;
   SLOTS.forEach((sl,i)=>{
@@ -4263,7 +4258,7 @@ function renderHero(){
       <div><b>${safeCount}</b><span>в сейфе</span></div>
       <div><b>${Object.values(S.bonus||{}).reduce((a,b)=>a+(b||0),0)}</b><span>бонусов</span></div>
       <div><b>${Math.round(S.coins)}</b><span>монет</span></div>
-      <div><b>${S.stars}</b><span>звёзд</span></div>
+      <div><b>${duplicateStarTotal()}</b><span>звёзд</span></div>
     </div>
 
     <div class="hgift">Сегодня за вход: <b>${gift.join(', ')||'награда уже получена'}</b></div>
@@ -4441,7 +4436,7 @@ function render(){
      <span class="pill">Коллекция <b>${u}</b>/120</span>
      <span class="pill">Колод <b>${closedDecks()}</b>/12</span>
      <span class="pill coin">Монеты <b>${S.coins}</b></span>
-     <span class="pill star">Звёзды <b>${S.stars}</b></span>
+     <span class="pill star">Звёзды <b>${duplicateStarTotal()}</b></span>
      <span class="pill">Рейтинг <b>${S.rating}</b></span>
      <span class="pill">Бонус-карт <b>${Object.values(S.bonus).reduce((a,b)=>a+b,0)}</b></span>
      <span class="pill">Плотность БК <b>${bkDensity().toFixed(2)}</b></span>
@@ -4529,7 +4524,6 @@ function renderPvp(){
 
   const av=availableModes();
   const icon={exp:'🌿',cls:'🍂',pro:'🔥'};
-  const isP3=SLOTS[ACTIVE] && SLOTS[ACTIVE].v.prof===3;
   const bkNow=bkList().length;
 
   let h=foldHead('pvp','Поединок',`сегодня ${S.matchesToday} ${plural(S.matchesToday,'матч','матча','матчей')}`);
@@ -4550,7 +4544,7 @@ function renderPvp(){
       lockTitle=`Нужно ${m.access} карт`;
       lockSub='режим ещё закрыт';
     } else if(!bkOk){
-      lockTitle=`Нужно ${bkMin} карт в БК`;
+      lockTitle=`Нужно ${bkMin} карт на руках`;
       lockSub=`сейчас ${bkNow}`;
     }
 
@@ -4558,7 +4552,7 @@ function renderPvp(){
       <i>${icon[k]}</i>
       <span class="mcopy">
         <b>${m.name}</b>
-        <span>${m.cards} ${plural(m.cards,'карта','карты','карт')} в руке · ${m.cards} ${plural(m.cards,'раунд','раунда','раундов')}${isP3?` · вход от ${bkMin} БК`:''}</span>
+        <span>${m.cards} ${plural(m.cards,'карта','карты','карт')} в руке · ${m.cards} ${plural(m.cards,'раунд','раунда','раундов')} · доступ: ${m.access} уникальных + ${bkMin} на руках</span>
       </span>
       <u>${ok?`+${m.win} монет`:lockTitle}
         <s>${ok?`ничья ${m.draw} · проигрыш ${m.lose}`:lockSub}</s>
@@ -5014,7 +5008,7 @@ function renderShop(){
     if(p.id==='bonus') sub='4 случайные основные карты + 1 гарантированная бонус-карта';
     if(p.id==='epic') sub='5 основных карт · 1 новая карта, если среди доступных есть ещё не собранные';
     if(p.id==='loot') sub='5 основных карт · до 2 новых, если они доступны · +1 гарантированная бонус-карта';
-    h+=`<button class="mode" onclick="buyPack('${p.id}')" ${S.stars>=p.price?'':'disabled'}>
+    h+=`<button class="mode" onclick="buyPack('${p.id}')" ${duplicateStarTotal()>=p.price?'':'disabled'}>
       <b>${p.name}</b><span>${p.price}★</span><span class="muted">${sub}</span></button>`;
   });
   const w=shopWeek();
@@ -5050,10 +5044,10 @@ function slotMetrics(sl){
   const matches=stat.matches||0, wins=stat.wins||0, losses=stat.losses||0, draws=stat.draws||0;
   const dups=(stat.dups||0);
   const order=(st.deckOrder||[]).slice(0,6).map(d=>CFG.animals[d]).join(' → ');
-  const modeGates=sl.v.prof===3 ? {exp:5,cls:10,pro:15} : null;
+  const modeGates={exp:3,cls:5,pro:7};
   const modeNames={exp:'Экспресс',cls:'Классика',pro:'Профи'};
   const pvpModes=Object.entries(CFG.modes)
-    .filter(([k,m])=>u>=m.access && (!modeGates || bk>=modeGates[k]))
+    .filter(([k,m])=>u>=m.access && bk>=modeGates[k])
     .map(([k])=>modeNames[k]).join(', ') || 'нет';
   return {
     u,physical,bk,closed,minDeck:Math.min(...fills),bonusStock,matches,wins,losses,draws,
@@ -5085,7 +5079,7 @@ function renderCompareStats(){
     ['Уникальных карт', x=>x.u],
     ['Физических карт на руках', x=>x.physical],
     ['Карт в БК', x=>x.bk],
-    ['Порог БК — Экспресс / Классика / Профи', x=>x.modeGates?'5 / 10 / 15':'без доп. порога'],
+    ['Минимум карт на руках — Экспресс / Классика / Профи', x=>'3 / 5 / 7'],
     ['Доступные режимы', x=>x.pvpModes],
     ['Закрыто колод', x=>`${x.closed}/12`],
     ['Минимум карт в одной колоде', x=>x.minDeck],
@@ -5123,8 +5117,8 @@ function renderCompareStats(){
     return x;
   });
 
-  let h=`<div class="striphead"><h3>Статистика всех профилей</h3><span class="tag">горизонтально · 6 вариантов</span></div>
-    <p class="muted">1A/1B/2A/2B: режимы открываются при 5 / 15 / 30 уникальных картах коллекции; дополнительного порога БК нет, кроме необходимой руки 3 / 5 / 7 карт. 3A/3B: те же пороги коллекции + вход по БК 5 / 10 / 15.</p>`;
+  let h=`<div class="striphead"><h3>Статистика всех профилей</h3><span class="tag">горизонтально · 4 варианта</span></div>
+    <p class="muted">Для 1A/1B/2A/2B режим открывается в два этапа: по прогрессу коллекции — 5 / 15 / 30 уникальных карт; для запуска матча дополнительно нужно минимум 3 / 5 / 7 карт на руках для Экспресса / Классики / Профи.</p>`;
 
   if(STATS_LAYOUT==='horizontal'){
     h+=`<div class="stat-horizontal-wrap">
@@ -5196,7 +5190,7 @@ function renderRules(){
       <b>Волны.</b> 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120 новых карт из паков. Дни 1 / 2 / 4 / 7 / 11 / 16 / 22 / 29 / 37 / 46.<br><br>
       <b>Очередь.</b> Первые 6 колод случайные, последние 6 фиксированы. Первая колода ускоряется каждой ${TUNE.firstForceEvery||2}-й новой картой; после неё вторая — каждой ${TUNE.secondForceEvery||3}-й, если ещё не собрана.<br><br>
       <b>Выдача.</b> Новизна ${Math.round(TUNE.noveltyStart*100)} / ${Math.round(TUNE.novelty30*100)} / ${Math.round(TUNE.novelty60*100)} / ${Math.round(TUNE.novelty85*100)}%. Лестница: ${st.map(s=>Math.round(s.share*100)+'%').join(' / ')}. Дубли по редкости 70 / 20 / 10.<br><br>
-      <b>PvP.</b> Режимы открываются по коллекции: Экспресс 5, Классика 15, Профи 30 уникальных карт. Матчмейкинг — по плотности D=(C+2R+4L)/размер БК, разрыв не более ±8%; дополнительно ±15 уникальных карт. БК бота того же размера, что у игрока. Перед матчем жеребьёвка определяет, кто первым называет характеристику. Далее право выбора характеристики чередуется каждый раунд; отвечающий выбирает карту по уже названной характеристике. Матч всегда играется полностью: Экспресс — 3 раунда, Классика — 5, Профи — 7, независимо от промежуточного счёта. Профили 1/2 после открытия требуют только физическую руку 3 / 5 / 7 карт. Профиль 3 дополнительно требует БК ≥5 / ≥10 / ≥15.<br><br>
+      <b>PvP.</b> Режимы открываются по коллекции: Экспресс 5, Классика 15, Профи 30 уникальных карт. Матчмейкинг — по плотности D=(C+2R+4L)/размер БК, разрыв не более ±8%; дополнительно ±15 уникальных карт. БК бота того же размера, что у игрока. Перед матчем жеребьёвка определяет, кто первым называет характеристику. Далее право выбора характеристики чередуется каждый раунд; отвечающий выбирает карту по уже названной характеристике. Матч всегда играется полностью: Экспресс — 3 раунда, Классика — 5, Профи — 7, независимо от промежуточного счёта. Для профилей 1/2 после открытия режима требуется физическая рука 3 / 5 / 7 карт соответственно.<br><br>
       <b>Бонус-карты.</b> 34 вида. На матч случайно выбираются типы из запаса: 3 / 5 / 7 для Экспресса / Классики / Профи. Бот получает аналог текущего фактического запаса бонусов игрока с отклонением общего объёма до ±8%; в раунде выбирает лучший подходящий бонус только из своей случайной выборки. Один тип можно использовать не более одного раза за матч. Ярость ×1,6 работает на карте любой редкости.<br><br>
       <b>Паки за звёзды.</b> 35★ / 45★ / 60★ / 90★. Epic/Loot гарантируют новые карты только среди доступных на текущий момент.
     </div>
@@ -5421,7 +5415,7 @@ function showTab(name){
 function paintAppbar(){
   const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v;};
   set('ab_day', S.day+'/60'); set('ab_cards', uniq()+'/120');
-  set('ab_coins', Math.round(S.coins)); set('ab_stars', S.stars);
+  set('ab_coins', Math.round(S.coins)); set('ab_stars', duplicateStarTotal());
 
   const pe=document.getElementById('ab_profile');
   const v=SLOTS[ACTIVE]&&SLOTS[ACTIVE].v;
