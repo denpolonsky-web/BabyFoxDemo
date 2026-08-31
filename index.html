@@ -2001,6 +2001,75 @@ button.mode{min-width:0!important}
   border-color:rgba(232,137,43,.45);
 }
 
+
+/* ===== Home spacing + compact behavior CTA v60 ===== */
+.screen[data-s="home"] > .panel{
+  margin-top:12px!important;
+}
+#homebehavior{
+  margin-top:12px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+}
+#homebehavior .behavior-head{
+  width:100%;
+  min-height:38px;
+  padding:7px 10px!important;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  border-radius:11px!important;
+  border:1px solid rgba(141,201,106,.72)!important;
+  background:rgba(141,201,106,.18)!important;
+  color:#dff7cd!important;
+  box-shadow:0 0 0 1px rgba(141,201,106,.08) inset;
+  font-size:11.5px!important;
+  font-weight:800!important;
+  line-height:1.15;
+}
+#homebehavior .behavior-head:hover{
+  border-color:#9fe676!important;
+  background:rgba(141,201,106,.24)!important;
+}
+#homebehavior .behavior-head .gear{
+  flex:0 0 auto;
+  font-size:14px;
+  line-height:1;
+}
+#homebehavior .behavior-head .behavior-label{
+  flex:1;
+  text-align:left;
+}
+#homebehavior .behavior-head .behavior-count-mini{
+  flex:0 0 auto;
+  color:#bfe8a4;
+  font-size:9px;
+  font-weight:700;
+  white-space:nowrap;
+}
+#homebehavior .behavior-body{
+  margin-top:8px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--panel);
+}
+#homebehavior .behaviorlist{
+  margin-top:0;
+}
+@media(max-width:460px){
+  .screen[data-s="home"] > .panel{margin-top:10px!important}
+  #homebehavior{margin-top:10px!important}
+  #homebehavior .behavior-head{
+    min-height:36px;
+    padding:6px 9px!important;
+    font-size:11px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3124,12 +3193,12 @@ function simTransferRound(myCard,botCard,cmp,res){
     S.stat.rounds++; S.stat.statWin[cmp.statIdx]++; S.today.rounds++; S.today.statWin[cmp.statIdx]++;
     if(!cmp.botShield){
       if(!S.opened[botCard]){
-        // Новая PvP-карта не должна обходить текущий потолок.
-        if(uniq()<cap()){
-          S.opened[botCard]=true; S.copies[botCard]=1;
-          S.stat.newCards++; S.stat.newCardsToday++; S.today.newCards++; S.week.newCards++;
-          S.stat.cardsWon++;
-        }
+        // PvP может дать новую карту сверх потолка текущей волны.
+        // Календарный сейф по-прежнему ограничивает пул карт соперника.
+        S.opened[botCard]=true; S.copies[botCard]=1;
+        S.stat.newCards++; S.stat.newCardsToday++; S.today.newCards++; S.week.newCards++;
+        if(uniq()>cap()) S.stat.overCap=(S.stat.overCap||0)+1;
+        S.stat.cardsWon++;
       }else{
         S.copies[botCard]=(S.copies[botCard]||0)+1;
         S.stat.dups++; S.stat.dupsPvP++;
@@ -3291,6 +3360,7 @@ function setMatches(v){ const n=parseInt(String(v).trim()); if(!isFinite(n)||n<0
 //  'compare' — все четыре варианта проживают день автоматически (режим анализа).
 let MODE='play';
 function setMode(m){ MODE=m; render(); }
+
 function nextDayAll(autoActive){
   const cur=ACTIVE;
   storeSlot(cur);
@@ -3300,8 +3370,6 @@ function nextDayAll(autoActive){
     useSlot(i);
     if(S.seasonOver) return;
     const isActive = (i===cur);
-    // ГЛОБАЛЬНЫЕ настройки поведения одинаковы для всех четырёх вариантов.
-    // Если пользователь выключил PvP / задания / QR / друзей, это выключается во всех 4 вариантах.
     CAPTURE = isActive && MODE==='play';
     nextDay();
     const doTasks  = AUTO.tasks;
@@ -3316,8 +3384,8 @@ function nextDayAll(autoActive){
     if(doQR && S.qrUsed<CFG.qr.limit && S.qrToday<1){
       S.qrToday++; S.qrUsed++; S.today.qrUsed++; addBonus(CFG.qr.bonusPerCode);
     }
-    if(doFriend && S.friends<30 && (S.today.friends||0)<1) inviteFriend();   // один друг в каждый прожитый день
-    for(let m=0;m<matches;m++){ if(pvpGateOk() && bkList().length>=3) autoMatch(); }
+    if(doFriend && S.friends<30 && (S.today.friends||0)<1) inviteFriend();
+    for(let mm=0;mm<matches;mm++){ if(pvpGateOk() && bkList().length>=3) autoMatch(); }
     CAPTURE=false;
     storeSlot(i);
   });
@@ -4283,7 +4351,11 @@ function renderHomeBehavior(){
   if(S.day===0){ el.innerHTML=''; return; }
 
   const enabled=[AUTO.pvp,AUTO.tasks,AUTO.qr,AUTO.friends].filter(Boolean).length;
-  let h=foldHead('behavior','Поведение',`${enabled}/4 включено`);
+  let h=`<button class="behavior-head" onclick="toggleOpen('behavior')">
+    <span class="gear">⚙️</span>
+    <span class="behavior-label">Задания, PvP и QR-ы</span>
+    <span class="behavior-count-mini">${enabled}/4</span>
+  </button>`;
   if(!OPEN.behavior){ el.innerHTML=h; return; }
 
   const item=(key,title,sub)=>`
@@ -4294,7 +4366,7 @@ function renderHomeBehavior(){
       </button>
     </div>`;
 
-  h+=`<div class="behaviorlist">
+  h+=`<div class="behavior-body"><div class="behaviorlist">
     <div class="behaviorrow behaviorrow-pvp">
       <div class="behaviorcopy">
         <b>Играть PvP</b>
@@ -4312,7 +4384,7 @@ function renderHomeBehavior(){
     ${item('tasks','Выполнять задания',AUTO.tasks?'ежедневные, недельные и социальные выполняются автоматически':'автовыполнение заданий выключено')}
     ${item('qr','Сканировать 1 QR в день',AUTO.qr?'один QR-код автоматически сканируется каждый прожитый день':'автосканирование QR выключено')}
     ${item('friends','Приглашать 1 друга в день',AUTO.friends?'по одному новому другу каждый прожитый день':'друзья автоматически не приглашаются')}
-  </div>`;
+  </div></div>`;
 
   el.innerHTML=h;
 }
