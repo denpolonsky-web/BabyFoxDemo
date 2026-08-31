@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BabyFox Лесная лига — DEMO · GDD strict bot ±8 + characteristic lottery · home behavior PvP matches selector v53</title>
+<title>BabyFox Лесная лига — DEMO · GDD strict bot ±8 + characteristic lottery · contextual hand prompt v58</title>
 <style>
 :root{
   --bg:#0E1310; --panel:#172019; --panel2:#1E2A21; --line:#2C3A2F;
@@ -1926,6 +1926,81 @@ button.mode{min-width:0!important}
   border-radius:7px;
 }
 
+
+/* ===== fixed battle bonus block + concise prompts v54 ===== */
+.roundprompt{
+  margin:8px 0!important;
+  padding:8px 10px!important;
+  text-align:center;
+}
+.roundprompt b{
+  font-size:13px;
+  line-height:1.2;
+}
+.battlebonusfixed{
+  margin:8px 0 6px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:rgba(0,0,0,.16);
+}
+.battlebonuslabel{
+  margin:0 0 6px;
+  font-size:11px;
+  font-weight:800;
+  color:var(--ink);
+}
+.battlebonusfixed .bonuspreview{
+  margin:0;
+}
+.battlebonusfixed .bonusactions{
+  margin-top:7px;
+}
+.battlebonusfixed .ghelp,
+.bonusempty{
+  margin:0!important;
+  padding:0!important;
+  text-align:left!important;
+}
+
+
+/* ===== optional bonus flow v56 ===== */
+.battlebonusfixed .bchip.sel{
+  border-color:var(--acc)!important;
+  box-shadow:0 0 0 2px rgba(232,137,43,.24) inset!important;
+}
+
+
+/* ===== contextual hand prompt v58 ===== */
+.roundhint{
+  margin-top:5px;
+  font-size:9.5px;
+  line-height:1.25;
+  color:var(--muted);
+  text-align:center;
+}
+
+
+/* ===== contextual hand prompt v58 ===== */
+.handprompt{
+  margin:8px 0 5px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:rgba(0,0,0,.16);
+  font-size:11px;
+  line-height:1.25;
+  text-align:center;
+  color:var(--ink);
+}
+.handprompt b{font-weight:900}
+.handprompt.answering{
+  border-color:rgba(143,165,184,.42);
+}
+.handprompt.naming{
+  border-color:rgba(232,137,43,.45);
+}
+
 </style>
 </head>
 <body>
@@ -3647,18 +3722,18 @@ function rollBonusIndex(){
 function chooseMyBonus(i){
   if(!M) return;
   if((M.usedBonusTypes||[]).includes(i)) return;
-  // Любую ещё не использованную бонус-карту можно сыграть.
-  // Подсветка — только рекомендация; неподходящая карта тоже разрешена.
-  M.myBonus=i; M.bonusDecision='bonus'; render();
+  // Бонус полностью опционален: выбранная карта просто прикрепляется к текущему ходу.
+  // Повторный клик снимает выбор.
+  M.myBonus = M.myBonus===i ? null : i;
+  render();
 }
-function skipMyBonus(){ if(!M) return; M.myBonus=null; M.bonusDecision='skip'; render(); }
 function selectMove(cardId,statIdx){
   if(!M||!['name','respond'].includes(M.phase)) return;
 
   M.myCard=cardId;
   M.myStat=M.namer==='me' ? statIdx : M.pendingStat;
   M.myBonus=null;
-  M.bonusDecision='pending';
+  M.bonusDecision='optional';
 
   render();
 }
@@ -3666,9 +3741,7 @@ function confirmMove(){
   if(!M||M.myCard===null||M.myCard===undefined) return;
   if(M.myStat===null||M.myStat===undefined||M.myStat<0) return;
 
-  const stock=bonusRanked(M.myStat,M.myCard);
-  if(stock.length && M.bonusDecision==='pending') return;
-
+  // Бонус не обязателен: если ничего не выбрано, раунд играется без бонуса.
   playRound(M.myCard,M.namer==='me'?M.myStat:-1);
 }
 // Игрок посмотрел на вскрытые карты и решил, применять ли бонус-карту
@@ -4562,7 +4635,7 @@ function applicableBonuses(list){
 
 function bonusPreview(){
   const list=bonusOwnedList();
-  if(!list.length) return '<div class="ghelp">Доступных бонус-карт на этот матч больше нет.</div>';
+  if(!list.length) return '<div class="ghelp bonusempty">Бонус-карт нет</div>';
 
   let s='<div class="gbonus bonuspreview">';
   list.forEach(b=>{
@@ -4574,7 +4647,7 @@ function bonusPreview(){
 }
 
 function bonusStrip(list, handler, selected){
-  if(!list.length) return '<div class="ghelp">Доступных бонус-карт на этот матч больше нет.</div>';
+  if(!list.length) return '<div class="ghelp bonusempty">Бонус-карт нет</div>';
 
   const applicable=applicableBonuses(list);
   const applicableIds=new Set(applicable.map(b=>b.i));
@@ -4722,7 +4795,7 @@ function renderMatch(){
 
   h+=`<div class="playboard">
     <div class="boardmid">
-      <div class="roundstat"><b>${shownStat===null||shownStat===undefined?'Характеристика определяется жеребьёвкой':'Играем по '+CFG.statPlayNames[shownStat]}</b></div>
+      <div class="roundstat"><b>${shownStat===null||shownStat===undefined?'Ждём выбора игрока':'Играем по '+CFG.statPlayNames[shownStat]}</b></div>
       <div class="versus">СРАВНЕНИЕ КАРТ</div>
     </div>
     <div class="playslot op"><span class="slotlabel">Соперник</span>${slotCard('op')}</div>
@@ -4731,9 +4804,6 @@ function renderMatch(){
 
   if(BR){
     h+=`<div class="revealnote ${BR.res}">${BR.res==='win'?'ПОБЕДА В РАУНДЕ':(BR.res==='lose'?'ПОРАЖЕНИЕ В РАУНДЕ':'НИЧЬЯ')}</div>`;
-    if(BR.statChooser==='bot'){
-      h+=`<div class="chosenstatnote"><span>Соперник выбрал характеристику</span><b>Играли по ${CFG.statPlayNames[BR.statIdx]}</b></div>`;
-    }
     h+=`<button class="gbtn revealnext" onclick="advanceBoardReveal()">Готов — дальше →</button>`;
     if(M.history && M.history.length){
       h+=`<button class="fhead ghist" onclick="toggleOpen('rounds')"><span class="fchev ${OPEN.rounds?'on':''}">›</span><b>История раундов</b><span class="fright">${M.history.length}/${m.cards}</span></button>`;
@@ -4743,25 +4813,41 @@ function renderMatch(){
     return;
   }
 
-  h+=`<div class="gask ${answering?'theirs':'mine'}">${answering
-      ? `${M.round===1?'<b>Жеребьёвка:</b> первым выбирает характеристику соперник. ':''}Соперник выбрал: <b>играем по ${CFG.statPlayNames[M.pendingStat]}</b>. Выберите карту.`
-      : `${M.round===1?'<b>Жеребьёвка:</b> первым выбираете характеристику Вы. ':''}Выберите карту и характеристику для этого раунда.`}</div>`;
+  const st=answering?M.pendingStat:(selected?M.myStat:null);
 
-  // Бонусы видны СРАЗУ, до выбора основной карты и характеристики,
-  // чтобы игрок мог учитывать их при выборе сравниваемой характеристики.
-  if(!selected){
-    h+=`<div class="bonuspeek">
-      <div class="glabel">Бонус-карты на этот матч</div>
-      <div class="bonuspeeknote">Учитывайте их при выборе карты и сравниваемой характеристики</div>
-      ${bonusPreview()}
-    </div>`;
+  // ЕДИНЫЙ бонус-блок всегда стоит в одном месте — над основными картами.
+  // До выбора карты/характеристики он информационный, после выбора становится интерактивным.
+  const previewList=bonusOwnedList();
+  if(selected){
+    const ranked=bonusRanked(M.myStat,M.myCard);
+    if(ranked.length){
+      h+=`<div class="battlebonusfixed">
+        <div class="battlebonuslabel">Выберите бонус-карту:</div>
+        ${bonusStrip(ranked,'chooseMyBonus',M.myBonus)}
+      </div>`;
+    }else{
+      h+=`<div class="battlebonusfixed"><div class="battlebonuslabel">Бонус-карт нет</div></div>`;
+    }
+  }else{
+    if(previewList.length){
+      h+=`<div class="battlebonusfixed">
+        <div class="battlebonuslabel">Выберите бонус-карту:</div>
+        ${bonusPreview()}
+      </div>`;
+    }else{
+      h+=`<div class="battlebonusfixed"><div class="battlebonuslabel">Бонус-карт нет</div></div>`;
+    }
   }
 
-  const st=answering?M.pendingStat:(selected?M.myStat:null);
   const hand=[...M.myHand].sort((a,b)=> st!==null&&st!==undefined
       ? CARDS[b].st[st]-CARDS[a].st[st]
       : Math.max(...CARDS[b].st)-Math.max(...CARDS[a].st));
   const suitable=suitableHandIds(hand,st);
+  h+=`<div class="handprompt ${answering?'answering':'naming'}">${
+      answering
+        ? `Выберите карту для характеристики: <b>${CFG.statNames[M.pendingStat]}</b>`
+        : '<b>Выберите сравниваемую характеристику</b>'
+    }</div>`;
   h+=`<div class="glabel">Карты в руке · ${hand.length}</div>
       <div class="ghand" id="handCarousel" onscroll="syncHandCarousel(this)">`;
   hand.forEach((id,k)=>{
@@ -4779,31 +4865,9 @@ function renderMatch(){
   h+=`</div><div class="carouselhint">Лучшая карта отмечена отдельно · смахивайте веер влево/вправо</div>`;
 
   if(selected){
-    const c=CARDS[M.myCard];
-    const ranked=bonusRanked(M.myStat,M.myCard);
-    const decisionDone=M.bonusDecision!=='pending';
-
-    h+=`<div class="gask mine"><b>Выбрано:</b> ${c.name} · играем по ${CFG.statPlayNames[M.myStat]} · <b>${c.st[M.myStat]}</b></div>`;
-    h+=`<div class="bonusdecision ${decisionDone?'done':'pending'}">
-      <div class="bdtitle">Бонус-карта · не больше одной за раунд</div>
-      <div class="bdsub">${ranked.length
-        ? 'Показана случайная выборка бонус-карт на этот матч. Подходящие подсвечены, но выбрать можно любую.'
-        : 'Доступных бонус-карт на этот матч больше нет.'}</div>`;
-    if(ranked.length){
-      h+=bonusStrip(ranked,'chooseMyBonus',M.myBonus);
-      h+=`<div class="bonusactions">
-        <button class="${M.bonusDecision==='skip'?'primary':''}" onclick="skipMyBonus()">Без бонуса</button>
-        <button disabled>${M.myBonus!==null?'Выбран: '+BONUS[M.myBonus].name:'Бонус не выбран'}</button>
-      </div>`;
-    } else if(M.bonusDecision==='pending'){
-      M.bonusDecision='skip';
-    }
-    h+=`</div>`;
-    h+=`<button class="gbtn" ${M.bonusDecision!=='pending'?'':'disabled'} onclick="confirmMove()">${
+    h+=`<button class="gbtn" onclick="confirmMove()">${
       M.myBonus!==null?'Сыграть с «'+BONUS[M.myBonus].name+'»':'Сыграть ход'
     } →</button>`;
-  } else {
-    h+=`<div class="ghelp">Выберите карту${answering?'':' и характеристику'}. После этого можно выбрать бонус.</div>`;
   }
 
   if(M.history && M.history.length){
