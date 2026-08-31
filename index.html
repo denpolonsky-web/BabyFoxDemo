@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BabyFox Лесная лига — DEMO · GDD strict bot ±8 + characteristic lottery · collection history separated from physical BK v47</title>
+<title>BabyFox Лесная лига — DEMO · GDD strict bot ±8 + characteristic lottery · home behavior PvP matches selector v53</title>
 <style>
 :root{
   --bg:#0E1310; --panel:#172019; --panel2:#1E2A21; --line:#2C3A2F;
@@ -1692,6 +1692,240 @@ button.mode{min-width:0!important}
   letter-spacing:.04em;
 }
 
+
+/* ===== compact collection screen v48 ===== */
+.collection-dgrid{margin-top:8px}
+.collection-compact .fc{
+  min-height:62px;
+  padding-bottom:18px;
+}
+.collection-compact .fc.nohand{
+  opacity:.72;
+  border-style:dashed;
+}
+.collection-compact .fc.blocked{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.fcnohand{
+  display:block;
+  margin-top:2px;
+  font-size:6.5px;
+  line-height:1.05;
+  font-style:normal;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.fccontrols{
+  position:absolute;
+  left:2px;
+  right:2px;
+  bottom:2px;
+  display:flex;
+  justify-content:center;
+  gap:2px;
+  z-index:3;
+}
+.fcctl{
+  width:18px;
+  height:15px;
+  padding:0!important;
+  border-radius:4px!important;
+  border:1px solid var(--line)!important;
+  background:rgba(0,0,0,.4)!important;
+  color:var(--muted)!important;
+  font-size:8px!important;
+  line-height:13px!important;
+  cursor:pointer;
+}
+.fcctl.on{
+  border-color:var(--acc2)!important;
+  color:var(--acc2)!important;
+}
+.fcctl.bk.on{
+  border-color:var(--acc)!important;
+  color:var(--acc)!important;
+}
+.collection-actions-note{margin-top:8px}
+@media(max-width:460px){
+  .collection-compact .frow{grid-template-columns:repeat(5,1fr)}
+  .collection-compact .fc{min-height:66px}
+}
+
+
+/* ===== Home deck sequence + Profiles tab v49 ===== */
+.tabbar{gap:0!important;padding-left:2px!important;padding-right:2px!important}
+.tabbar .tab{padding-left:1px!important;padding-right:1px!important}
+.tabbar .tab i{font-size:14px!important}
+.tabbar .tab span{font-size:6.8px!important;letter-spacing:-.01em}
+
+.homeorder{
+  margin-top:9px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:rgba(0,0,0,.16);
+}
+.homeorderhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+}
+.homeorderhead b{font-size:11px}
+.homeorderhead span{font-size:9px;color:var(--muted)}
+.homeorderrow{
+  display:flex;
+  gap:4px;
+  overflow-x:auto;
+  padding-bottom:3px;
+  scrollbar-width:none;
+}
+.homeorderrow::-webkit-scrollbar{display:none}
+.homeorderitem{
+  flex:0 0 72px;
+  min-width:72px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:5px 4px;
+  text-align:center;
+  background:rgba(0,0,0,.18);
+  position:relative;
+}
+.homeorderitem>span{
+  position:absolute;
+  top:3px;
+  left:4px;
+  font-size:7px;
+  color:var(--muted);
+}
+.homeorderitem i{display:block;font-style:normal;font-size:17px}
+.homeorderitem b{
+  display:block;
+  font-size:8px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.homeorderitem em{
+  display:block;
+  font-style:normal;
+  font-size:8px;
+  color:var(--muted);
+}
+.homeorderitem.done{
+  border-color:rgba(141,201,106,.58);
+  background:rgba(141,201,106,.08);
+}
+.homeorderitem.current{
+  border-color:var(--acc);
+  box-shadow:0 0 0 1px rgba(232,137,43,.16) inset;
+}
+
+.profileparams{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin:10px 0;
+}
+.profileparams>div{
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:7px 8px;
+  background:rgba(0,0,0,.16);
+  min-width:0;
+}
+.profileparams span{
+  display:block;
+  font-size:8.5px;
+  color:var(--muted);
+  margin-bottom:2px;
+}
+.profileparams b{
+  display:block;
+  font-size:10.5px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+@media(max-width:380px){
+  .tabbar .tab span{font-size:6.2px!important}
+  .tabbar .tab i{font-size:13px!important}
+  .profileparams{grid-template-columns:1fr}
+}
+
+
+/* ===== home behavior widget v51 ===== */
+.behaviorlist{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:8px;
+}
+.behaviorrow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 9px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:rgba(0,0,0,.16);
+}
+.behaviorcopy{
+  min-width:0;
+  flex:1;
+}
+.behaviorcopy b{
+  display:block;
+  font-size:11.5px;
+  line-height:1.2;
+}
+.behaviorcopy span{
+  display:block;
+  margin-top:2px;
+  font-size:9.5px;
+  line-height:1.3;
+  color:var(--muted);
+}
+.behavior-toggle{
+  flex:0 0 54px;
+  min-width:54px;
+  padding:7px 6px!important;
+  border-radius:999px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  color:var(--muted)!important;
+  background:var(--panel2)!important;
+  border:1px solid var(--line)!important;
+}
+.behavior-toggle.on{
+  color:#dff3ce!important;
+  border-color:#587c42!important;
+  background:#294225!important;
+}
+
+
+/* ===== PvP matches selector in behavior v53 ===== */
+.behavior-count{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:7px;
+}
+.behavior-count>span{
+  margin:0!important;
+  font-size:9.5px!important;
+  color:var(--muted)!important;
+}
+.behavior-count .tnum{
+  width:48px!important;
+  min-width:48px;
+  padding:5px 6px;
+  text-align:center;
+  border-radius:7px;
+}
+
 </style>
 </head>
 <body>
@@ -1716,7 +1950,8 @@ button.mode{min-width:0!important}
   <div class="screens">
     <section class="screen on" data-s="home">
       <div id="hero"></div>
-      <div class="panel" id="homecoll" style="margin-top:12px"></div>
+      <div class="panel fold" id="homebehavior" style="margin-top:10px"></div>
+      <div class="panel" id="homecoll" style="margin-top:10px"></div>
       <div class="panel fold" id="pvp" style="margin-top:10px"></div>
       <div class="panel fold" id="lastmatch" style="margin-top:10px"></div>
       <div class="panel fold" id="tasks" style="margin-top:10px"></div>
@@ -1737,6 +1972,16 @@ button.mode{min-width:0!important}
     <section class="screen" data-s="statsall">
       <div class="panel" id="comparestats"></div>
     </section>
+    <section class="screen" data-s="profiles">
+      <div class="panel">
+        <div class="striphead">
+          <h3>Профили</h3>
+          <span class="tag">переключение вариантов</span>
+        </div>
+        <div id="ptabs"></div>
+        <div id="profiletabs"></div>
+      </div>
+    </section>
     <section class="screen" data-s="more">
       <div class="panel">
         <h3>Общее <span class="tag">служебная панель DEMO</span></h3>
@@ -1749,11 +1994,10 @@ button.mode{min-width:0!important}
           <button onclick="exportJSON()">Экспорт JSON</button>
           <button onclick="resetAll()">Сброс всех</button>
           <button class="primary" onclick="toggleTune()">⚙ Параметры выдачи</button>
-          <button id="statsLayoutBtn" onclick="toggleStatsLayout()">↔ Параметры горизонтально (ПК)</button>
+          <button id="statsLayoutBtn" onclick="toggleStatsLayout()">↕ Параметры вертикально (моб.)</button>
         </div>
         <div id="hud" style="margin-top:10px"></div>
       </div>
-      <div class="panel" style="margin-top:12px"><div id="ptabs"></div><div id="profiletabs"></div></div>
       <div id="tunepanel" class="panel" style="display:block;margin-top:12px"></div>
       <div class="panel" id="stats" style="margin-top:12px"></div>
       <div class="panel" id="rules" style="margin-top:12px"></div>
@@ -1761,12 +2005,13 @@ button.mode{min-width:0!important}
   </div>
 
   <nav class="tabbar">
-    <button class="tab on" data-t="home" onclick="showTab('home')"><i>🌲</i><span>Игра</span></button>
+    <button class="tab on" data-t="home" onclick="showTab('home')"><i>🌲</i><span>Главная</span></button>
     <button class="tab" data-t="coll" onclick="showTab('coll')"><i>🎴</i><span>Коллекция</span></button>
     <button class="tab" data-t="deck" onclick="showTab('deck')"><i>⚔️</i><span>Колода</span></button>
     <button class="tab" data-t="shop" onclick="showTab('shop')"><i>🛒</i><span>Магазин</span></button>
     <button class="tab" data-t="statsall" onclick="showTab('statsall')"><i>📊</i><span>Статистика</span></button>
-    <button class="tab" data-t="more" onclick="showTab('more')"><i>⚙️</i><span>Ещё</span></button>
+    <button class="tab" data-t="profiles" onclick="showTab('profiles')"><i>👥</i><span>Профили</span></button>
+    <button class="tab" data-t="more" onclick="showTab('more')"><i>⚙️</i><span>Настройки</span></button>
   </nav>
 </div>
 <script>
@@ -2475,7 +2720,7 @@ const ANIM = { pack:false, win:true };
 function setNum(k,v){ ANIM[k]=v; render(); }
 function setAnim(k,v){ ANIM[k]=v; render(); }
 // Что развёрнуто на главной. По умолчанию всё свёрнуто — на экране только выжимка.
-const OPEN = { pvp:false, tasks:false, deck:false, bonus:false, log:false, last:false, rounds:false, collFull:false };
+const OPEN = { behavior:false, pvp:false, tasks:false, deck:false, bonus:false, log:false, last:false, rounds:false, collFull:false };
 // Красная кнопка «Играть»: раскрывает выбор режима и подводит к нему экран
 function openPvp(){
   OPEN.pvp=true; render();
@@ -3000,7 +3245,7 @@ function nextDayAll(autoActive){
     if(doQR && S.qrUsed<CFG.qr.limit && S.qrToday<1){
       S.qrToday++; S.qrUsed++; S.today.qrUsed++; addBonus(CFG.qr.bonusPerCode);
     }
-    if(doFriend && S.friends<30 && S.day%3===0) inviteFriend();   // примерно один друг раз в три дня
+    if(doFriend && S.friends<30 && (S.today.friends||0)<1) inviteFriend();   // один друг в каждый прожитый день
     for(let m=0;m<matches;m++){ if(pvpGateOk() && bkList().length>=3) autoMatch(); }
     CAPTURE=false;
     storeSlot(i);
@@ -3727,13 +3972,24 @@ function renderProfiles(){
       ${PROFILE_DESC[cur.v.prof]}<br>
       <b>${NOV_TITLE[cur.v.nov]}</b> (пороги новизны ${NOV_NUM[cur.v.nov]}): ${NOV_DESC[cur.v.nov]}<br>
       <span style="color:var(--muted)">День проживается одновременно во всех шести коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Профили 1 и 2 не имеют дополнительного порога БК: режим открывается по коллекции 5 / 15 / 30 и требует только руку 3 / 5 / 7. Профиль 3 дополнительно требует БК 5 / 10 / 15.</span></div>`;
+
+  const ladder=(TUNE.ladderSteps||[]).map(x=>`${x.count}:${Math.round(x.share*100)}%`).join(' · ');
+  const pvpGate=cur.v.prof===3?'5 / 10 / 15':'без доп. порога БК';
+  h+=`<div class="profileparams">
+    <div><span>Активный</span><b>${cur.v.id}</b></div>
+    <div><span>Новизна</span><b>${NOV_NUM[cur.v.nov]}</b></div>
+    <div><span>Механика 3-й карты</span><b>${cur.v.prof===1?'случайная':((cur.v.prof===2||cur.v.prof===3)?'в самую пустую':'—')}</b></div>
+    <div><span>PvP-порог БК</span><b>${pvpGate}</b></div>
+    <div><span>Лестница</span><b>${ladder}</b></div>
+    <div><span>Дубли C / R / L</span><b>${Math.round(TUNE.dupC*100)} / ${Math.round(TUNE.dupR*100)} / ${Math.round(TUNE.dupL*100)}%</b></div>
+  </div>`;
   // тумблеры автопрогона
   h+=`<div class="autorow">
     <span class="muted">Что делают все 6 вариантов каждый день:</span>
     <button class="tgl ${AUTO.tasks?'on':''}" onclick="toggleAuto('tasks')">Выполнять задания: ${AUTO.tasks?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.qr?'on':''}" onclick="toggleAuto('qr')">Сканировать 1 QR в день: ${AUTO.qr?'ДА':'НЕТ'}</button>
     <button class="tgl ${AUTO.pvp?'on':''}" onclick="toggleAuto('pvp')">Играть PvP: ${AUTO.pvp?'ДА ('+MATCHES_PER_DAY+' матча)':'НЕТ'}</button>
-    <button class="tgl ${AUTO.friends?'on':''}" onclick="toggleAuto('friends')">Приглашать друзей: ${AUTO.friends?'ДА':'НЕТ'}</button>
+    <button class="tgl ${AUTO.friends?'on':''}" onclick="toggleAuto('friends')">Приглашать 1 друга в день: ${AUTO.friends?'ДА':'НЕТ'}</button>
     <span class="muted">|</span>
     <button class="tgl ${MODE==='play'?'on':''}" onclick="setMode('play')">Режим игры</button>
     <button class="tgl ${MODE==='compare'?'on':''}" onclick="setMode('compare')">Режим сравнения</button>
@@ -3953,6 +4209,46 @@ const sw=(k,label)=>`<button class="swch ${ANIM[k]?'on':''}" onclick="setAnim('$
   <i></i>${label}</button>`;
 
 
+
+function renderHomeBehavior(){
+  const el=$('homebehavior'); if(!el) return;
+  if(S.day===0){ el.innerHTML=''; return; }
+
+  const enabled=[AUTO.pvp,AUTO.tasks,AUTO.qr,AUTO.friends].filter(Boolean).length;
+  let h=foldHead('behavior','Поведение',`${enabled}/4 включено`);
+  if(!OPEN.behavior){ el.innerHTML=h; return; }
+
+  const item=(key,title,sub)=>`
+    <div class="behaviorrow">
+      <div class="behaviorcopy"><b>${title}</b><span>${sub}</span></div>
+      <button class="behavior-toggle ${AUTO[key]?'on':''}" onclick="toggleAuto('${key}')">
+        ${AUTO[key]?'ДА':'НЕТ'}
+      </button>
+    </div>`;
+
+  h+=`<div class="behaviorlist">
+    <div class="behaviorrow behaviorrow-pvp">
+      <div class="behaviorcopy">
+        <b>Играть PvP</b>
+        <span>${AUTO.pvp?'автоматические матчи каждый прожитый день':'PvP не играется'}</span>
+        <label class="behavior-count">
+          <span>Матчей в день</span>
+          <input class="tnum" type="text" inputmode="numeric" value="${MATCHES_PER_DAY}"
+                 onchange="setMatches(this.value)">
+        </label>
+      </div>
+      <button class="behavior-toggle ${AUTO.pvp?'on':''}" onclick="toggleAuto('pvp')">
+        ${AUTO.pvp?'ДА':'НЕТ'}
+      </button>
+    </div>
+    ${item('tasks','Выполнять задания',AUTO.tasks?'ежедневные, недельные и социальные выполняются автоматически':'автовыполнение заданий выключено')}
+    ${item('qr','Сканировать 1 QR в день',AUTO.qr?'один QR-код автоматически сканируется каждый прожитый день':'автосканирование QR выключено')}
+    ${item('friends','Приглашать 1 друга в день',AUTO.friends?'по одному новому другу каждый прожитый день':'друзья автоматически не приглашаются')}
+  </div>`;
+
+  el.innerHTML=h;
+}
+
 // Коллекция на главной: свёрнутая сводка по колодам, разворачивается целиком
 function renderHomeColl(){
   const el=$('homecoll'); if(!el) return;
@@ -3973,6 +4269,21 @@ function renderHomeColl(){
       <u style="width:${have*10}%"></u></div>`;
   });
   s+='</div>';
+
+  const order=playerOrder();
+  s+=`<div class="homeorder">
+    <div class="homeorderhead"><b>Последовательность сбора колод</b><span>1 → 12</span></div>
+    <div class="homeorderrow">`;
+  order.forEach((d,pos)=>{
+    const ids=deckCards(d);
+    const have=ids.filter(i=>S.opened[i]).length;
+    const done=have===10;
+    const current=!done && !order.slice(0,pos).some(pd=>deckCards(pd).some(i=>!S.opened[i]));
+    s+=`<div class="homeorderitem ${done?'done':''} ${current?'current':''}">
+      <span>${pos+1}</span><i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b><em>${have}/10</em>
+    </div>`;
+  });
+  s+=`</div></div>`;
 
   s+=`<button class="fullbtn" onclick="toggleOpen('collFull')">
       ${OPEN.collFull?'Свернуть карты':'Показать все карты'}
@@ -4066,7 +4377,7 @@ function render(){
   if(bn){ bn.textContent = S.day===0?'Начать сезон':(S.seasonOver?'Сезон завершён':'Прожить день (авто)');
           bn.disabled=S.seasonOver; }
   if(M){ renderMatch(); $('match').style.display='block'; } else { $('match').style.display='none'; }
-  paintAppbar(); renderHero(); renderHomeColl(); renderPvp(); renderLastMatch(); renderTasks(); renderHomeDeck(); renderHomeBonus(); renderCollection(); renderShop(); renderBk(); renderBonuses(); renderCompareStats(); renderStats(); renderRules(); renderLog();
+  paintAppbar(); renderHero(); renderHomeBehavior(); renderHomeColl(); renderPvp(); renderLastMatch(); renderTasks(); renderHomeDeck(); renderHomeBonus(); renderCollection(); renderShop(); renderBk(); renderBonuses(); renderCompareStats(); renderStats(); renderRules(); renderLog();
 }
 function renderBk(){
   const bk=bkList();
@@ -4520,53 +4831,115 @@ function queueStrip(){
 function renderCollection(){
   const lockedSet=new Set(safeLocked());
   const safeCount=lockedSet.size;
-  let h=`<h3>Коллекция <span class="tag">${uniq()}/120 · экземпляров ${S.copies.reduce((a,b)=>a+b,0)}</span></h3>`;
+  const own=ownedCards().length;
+  const need=bkNeedsPick();
 
-  const own=ownedCards().length, need=bkNeedsPick();
+  let h=`<div class="striphead"><h3>Коллекция</h3>
+    <span class="tag">${uniq()}/120 · ${closedDecks()}/12 колод</span></div>`;
+
   h+=`<div class="collection-summary">
     <span>Собрано <b>${uniq()}</b></span>
+    <span>На руках <b>${own}</b></span>
     <span>В сейфе <b>${safeCount}</b></span>
-    <span>Колод <b>${closedDecks()}/12</b></span>
   </div>`;
 
-  h+=`<p class="muted">Все карты, которые хотя бы один раз выпадали игроку, навсегда остаются открытыми в коллекции. Если последний экземпляр проигран, карта помечается «нет на руках» и не входит в БК.</p>`;
-  h+=`<p class="muted">Боевая колода: ${bkList().length} из ${CFG.bkSize}. ${need
-    ? `Карт на руках ${own} — больше 50, поэтому состав боевой колоды можно выбрать вручную. Отмечено ${S.bkPicked.length} из 50.`
-    : `Карт на руках ${own} — все доступные карты автоматически входят в боевую колоду.`}</p>`;
+  h+=`<p class="muted">Все карты, которые хотя бы один раз выпадали игроку, остаются открытыми в коллекции. Если последний экземпляр проигран, карта остаётся открытой с пометкой «нет на руках» и не входит в БК.</p>`;
 
-  h+=`<p class="muted">Блокировка защищает карту от участия в матчах и потери. Слотов куплено ${S.slots}/5, занято ${S.blocked.length}.
-    ${S.slots<5?`<button onclick="buySlot()">Купить слот ${S.slots+1} за ${CFG.slotPrices[S.slots]} монет</button>`:''}</p>`;
+  h+=`<p class="muted">Боевая колода: ${bkList().length} из ${CFG.bkSize}. ${
+    need
+      ? `Карт на руках больше 50 — состав БК можно менять вручную. Отмечено ${S.bkPicked.length} из 50.`
+      : `Все карты, которые реально есть на руках и не заблокированы, автоматически входят в БК.`
+  }</p>`;
 
-  for(let d=0;d<12;d++){
-    const ids=deckCards(d), have=ids.filter(i=>S.opened[i]).length;
-    const safeInDeck=ids.filter(i=>lockedSet.has(i)).length;
-    h+=`<div class="deck ${have===10?'full':''}">
-      <div class="dh"><b>${CFG.animals[d]}</b>
-      <span class="tag">${have}/10${safeInDeck?` · 🔒 ${safeInDeck}`:''}${have===10?' · собрана':''}</span></div>
-      <div class="cards">`;
+  h+=`<div class="dgrid collection-dgrid">`;
+  [...Array(12).keys()].forEach(d=>{
+    const ids=deckCards(d);
+    const have=ids.filter(i=>S.opened[i]).length;
+    const safeInDeck=ids.filter(i=>lockedSet.has(i)&&!S.opened[i]).length;
+    const physical=ids.filter(i=>(S.copies[i]||0)>0).length;
+    h+=`<div class="dtile${have===10?' full':''}">
+      <i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b>
+      <span>${have}/10 открыто · ${physical} на руках${safeInDeck?` · 🔒${safeInDeck}`:''}</span>
+      <u style="width:${have*10}%"></u>
+    </div>`;
+  });
+  h+='</div>';
 
-    ids.forEach(i=>{
-      const blocked=S.blocked.includes(i), safe=lockedSet.has(i);
-      let btn='';
-      if(S.opened[i] && (S.copies[i]||0)>0){
-        btn=`<button class="lock ${blocked?'on':''}" onclick="toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`;
-        if(need && !blocked){
-          const on=S.bkPicked.includes(i);
-          btn+=`<button class="bkpick ${on?'on':''}" onclick="toggleBk(${i})">${on?'✓':'+'}</button>`;
-        }
-      }
-      if(safe && !S.opened[i]){
+  h+=`<button class="fullbtn" onclick="toggleOpen('collFull')">
+    ${OPEN.collFull?'Свернуть карты':'Показать все карты'}
+    <span>${OPEN.collFull?'вернуться к сводке':`${uniq()} открыто · ${own} реально на руках`}</span>
+  </button>`;
+
+  if(OPEN.collFull){
+    h+='<div class="fullcoll collection-compact">';
+    [...Array(12).keys()].forEach((d,k)=>{
+      const ids=deckCards(d);
+      const have=ids.filter(i=>S.opened[i]).length;
+      const physical=ids.filter(i=>(S.copies[i]||0)>0).length;
+
+      h+=`<div class="fdeck${have===10?' full':''}">
+        <div class="fdh">
+          <span class="fnum">${k+1}</span>
+          <i>${CFG.emoji[d]}</i><b>${CFG.animals[d]}</b>
+          <span class="ftag">${have}/10 открыто · ${physical} на руках</span>
+        </div>
+        <div class="frow">`;
+
+      ids.forEach(i=>{
         const c=CARDS[i];
-        h+=`<div class="chip safe-card">
-          <div class="cface">🔒</div>
-          <div class="cbody"><b>${c.name}</b><span class="rar">в сейфе</span><span class="st">закрыто</span></div>
+        const opened=!!S.opened[i];
+        const copies=S.copies[i]||0;
+        const blocked=S.blocked.includes(i);
+        const safe=lockedSet.has(i)&&!opened;
+
+        if(safe){
+          h+=`<div class="fc safe" title="${c.name}">
+            <i>🔒</i><b>—</b><s>${c.name.split(': ')[1]}</s>
+          </div>`;
+          return;
+        }
+
+        if(!opened){
+          h+=`<div class="fc miss" title="Карта ещё не открыта">
+            <i>·</i><b>—</b><s>не открыта</s>
+          </div>`;
+          return;
+        }
+
+        const cls=`have ${c.rar}${copies===0?' nohand':''}${blocked?' blocked':''}`;
+        const val=Math.max(...c.st);
+        const count=copies>1?`<u>×${copies}</u>`:'';
+        const nohand=copies===0?`<em class="fcnohand">нет на руках</em>`:'';
+
+        let controls='';
+        if(copies>0){
+          controls+=`<button class="fcctl ${blocked?'on':''}" title="${blocked?'Разблокировать':'Заблокировать'}" onclick="event.stopPropagation();toggleBlock(${i})">${blocked?'🔒':'🔓'}</button>`;
+          if(need && !blocked){
+            const on=S.bkPicked.includes(i);
+            controls+=`<button class="fcctl bk ${on?'on':''}" title="${on?'Убрать из БК':'Добавить в БК'}" onclick="event.stopPropagation();toggleBk(${i})">${on?'✓':'+'}</button>`;
+          }
+        }
+
+        h+=`<div class="fc ${cls}" title="${c.name}">
+          <i>${CFG.emoji[c.deck]}</i><b>${val}</b><s>${c.name.split(': ')[1]}</s>
+          ${count}${nohand}
+          ${controls?`<div class="fccontrols">${controls}</div>`:''}
         </div>`;
-      } else {
-        h+=cardChip(i,btn);
-      }
+      });
+
+      h+='</div></div>';
     });
-    h+='</div></div>';
+    h+='</div>';
+
+    h+=`<p class="muted collection-actions-note">🔓/🔒 — защита карты от PvP. ${
+      need ? 'Кнопка + / ✓ управляет составом БК, когда на руках больше 50 уникальных карт.' : 'Сейчас отдельный выбор состава БК не нужен.'
+    }</p>`;
   }
+
+  h+=`<p class="muted">Слотов блокировки куплено ${S.slots}/5, занято ${S.blocked.length}. ${
+    S.slots<5?`<button onclick="buySlot()">Купить слот ${S.slots+1} за ${CFG.slotPrices[S.slots]} монет</button>`:''
+  }</p>`;
+
   $('collection').innerHTML=h;
 }
 function renderShop(){
@@ -4632,7 +5005,7 @@ function slotMetrics(sl){
   };
 }
 
-let STATS_LAYOUT='vertical';
+let STATS_LAYOUT='horizontal';
 function toggleStatsLayout(){
   STATS_LAYOUT = STATS_LAYOUT==='vertical' ? 'horizontal' : 'vertical';
   renderCompareStats();
@@ -4686,7 +5059,7 @@ function renderCompareStats(){
     return x;
   });
 
-  let h=`<h3>Статистика всех профилей <span class="tag">6 вариантов</span></h3>
+  let h=`<div class="striphead"><h3>Статистика всех профилей</h3><span class="tag">горизонтально · 6 вариантов</span></div>
     <p class="muted">1A/1B/2A/2B: режимы открываются при 5 / 15 / 30 уникальных картах коллекции; дополнительного порога БК нет, кроме необходимой руки 3 / 5 / 7 карт. 3A/3B: те же пороги коллекции + вход по БК 5 / 10 / 15.</p>`;
 
   if(STATS_LAYOUT==='horizontal'){
