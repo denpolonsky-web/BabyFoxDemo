@@ -856,6 +856,11 @@ body{background:
 .screens{padding:10px 10px 84px}.panel{padding:12px;border-radius:13px}
 h3{font-size:13px;letter-spacing:.055em;margin:15px 0 9px}
 .muted{font-size:12px;line-height:1.45}
+.changelog{border:1px solid #d33a3a!important;background:rgba(211,58,58,.06)!important}
+.changelog>summary{color:#ff6b6b!important}
+.changelogbody{color:#ff8a8a}
+.changelogbody ul{margin:6px 0 0 0;padding-left:18px}
+.changelogbody li{margin:4px 0;line-height:1.35}
 .tabbar{max-width:460px;padding:6px 5px calc(7px + env(safe-area-inset-bottom));
   background:rgba(17,24,19,.96);backdrop-filter:blur(18px)}
 .tab{min-height:48px;font-size:10px;gap:1px}.tab i{font-size:19px}
@@ -2015,12 +2020,15 @@ button.mode{min-width:0!important}
 }
 #homebehavior .behavior-head{
   width:100%;
+  margin-left:0!important;
+  margin-right:0!important;
   min-height:38px;
   padding:7px 10px!important;
   display:flex;
   align-items:center;
-  justify-content:flex-start;
+  justify-content:center;
   gap:8px;
+  position:relative;
   border-radius:11px!important;
   border:1px solid rgba(141,201,106,.72)!important;
   background:rgba(141,201,106,.18)!important;
@@ -2040,11 +2048,14 @@ button.mode{min-width:0!important}
   line-height:1;
 }
 #homebehavior .behavior-head .behavior-label{
-  flex:1;
-  text-align:left;
+  flex:0 1 auto;
+  text-align:center;
 }
 #homebehavior .behavior-head .behavior-count-mini{
-  flex:0 0 auto;
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
   color:#bfe8a4;
   font-size:9px;
   font-weight:700;
@@ -2086,6 +2097,8 @@ button.mode{min-width:0!important}
     <div class="abstats">
       <span class="ab">День <b id="ab_day">1</b></span>
       <span class="ab">Карт <b id="ab_cards">0</b></span>
+      <span class="ab">На руках <b id="ab_hand">0</b></span>
+      <span class="ab">Дублей <b id="ab_dups">0</b></span>
       <span class="ab coin">Монеты <b id="ab_coins">0</b></span>
       <span class="ab star">Звёзды <b id="ab_stars">0</b></span>
     </div>
@@ -2173,21 +2186,22 @@ const TUNE = {
   // Когда выдаётся новая карта «в колоду», игра смотрит на очередь колод (личную,
   // одну для всех) и по этим ступеням решает, В КАКУЮ из ещё не собранных колод пойдёт карта.
   // Каждая ступень — доля попаданий в группу колод. Внутри группы колоды делят долю поровну.
-  // Пример по умолчанию: 1-я колода очереди — 55%, следующие ДВЕ — суммарно 35% (по 17,5%),
-  // все остальные — суммарно 10%. Суммы долей = 1.
+  // ОБНОВЛЕНО: утверждённая раскладка — приоритетная колода 40%, следующие ПЯТЬ
+  // суммарно 25% (по 5% на колоду), все остальные суммарно 35%. Суммы долей = 1.
   ladderSteps: [
-    { count: 1, share: 0.55 },   // самая приоритетная колода
-    { count: 2, share: 0.35 },   // следующая пара колод (делят поровну)
-    { count: 99, share: 0.10 },  // все оставшиеся открытые колоды (делят поровну)
+    { count: 1, share: 0.40 },   // самая приоритетная колода
+    { count: 5, share: 0.25 },   // следующие пять колод очереди (делят поровну, по 5%)
+    { count: 99, share: 0.35 },  // все оставшиеся открытые колоды (делят поровну)
   ],
   // (подобрано прогоном: с N=3 даёт быстрый старт первой колоды и неочевидный порядок дальше)
   // ── Зафиксировано (не трогаем — это финал баланса) ──
-  noveltyStart: 0.85, novelty30: 0.65, novelty60: 0.45, novelty85: 0.30,
+  // ОБНОВЛЕНО: финальный набор новизны — вариант A профиля 1A
+  noveltyStart: 0.97, novelty30: 0.76, novelty60: 0.56, novelty85: 0.32,
   // ── ШАГ СЛУЧАЙНОЙ ВЫДАЧИ ──
   // Каждая N-я новая карта выдаётся ПОЛНОСТЬЮ СЛУЧАЙНО среди всех доступных карт
   // коллекции (кроме заблокированных сейфом), в обход лестницы. 0 — выключено.
   randomEveryN: 3,
-  decay: 0,            // убыль веса по заполнению колоды (0 — выкл)
+  decay: 0.75,         // ОБНОВЛЕНО: коэффициент убыли 0,75 (плавный переход между колодами)
   fillEveryN: 0,       // каждая N-я карта в самую незаполненную колоду (0 — выкл)
   fillMinGap: 0,       // требуемое отставание от средней заполненности, в картах
   firstForceEvery: 2,   // пока не закрыта первая колода: каждая 2-я новая карта идёт туда
@@ -2196,16 +2210,17 @@ const TUNE = {
   finishLe2: 1.0, finishLe4: 1.0,        // добивание почти собранных колод выключено (=1)
   dupC: 0.70, dupR: 0.20, dupL: 0.10,
   achDeck: 125,
-  bonusDrawExpress: 3, bonusDrawClassic: 5, bonusDrawPro: 7,
+  // ОБНОВЛЕНО: вытяжка 3/5/7 отменена — в матче доступен весь запас бонус-карт,
+  // каждый тип в единственном экземпляре, не более одной карты за раунд.
 };
 
 /* ================= КОНФИГ БАЛАНСА ================= */
 const CFG = {
   seasonDays: 60,
   animals: ['Ёж','Белка','Заяц','Ласка','Барсук','Бобр','Рысь','Сова','Олень','Волк','Медведь','Лис'],
-  // ФИКСИРОВАННЫЙ порядок колод — один для всех игроков. Совпадает с порядком
-  // отображения животных в коллекции, поэтому лестница визуально «идёт по порядку»,
-  // но сам порядок перетасован, так что закрываются колоды не Ёж→Белка→…, а вразброс.
+  // Очередь колод: первые шесть перемешиваются персонально для каждого игрока,
+  // последние шесть одинаковы для всех (Сова → Олень → Волк → Бобр → Медведь → Лис).
+  // Очередь работает только внутри логики выдачи и не влияет на порядок в коллекции.
   legPerDeck: [2,1,2,1,2,2,1,2,2,2,2,1],
   rarePerDeck: 3,
   cardsPerDeck: 10,
@@ -2223,7 +2238,7 @@ const CFG = {
   dailyPackTimeout: 14,               // пачка сменяется по 10 выполненным ИЛИ по 14 предложенным
 
   starValue: { C:1, R:2, L:3 },
-  loginCoins: {1:5,2:5,4:10,6:15},
+  loginCoins: {1:5,2:5,6:15},   // ОБНОВЛЕНО: 25 монет за цикл, на 4-й день только пак
   loginBonus: {3:1,5:1,7:3},
   loginPackDays: [4,7],
   dailyTaskCoins: [10,11,12,13,14,15],
@@ -2266,16 +2281,20 @@ const CFG = {
     {id:'loot',  name:'Лут-пак',         price:90, cards:5, forceNew:2, bonus:1},
   ],
   achievements: { bk50:200, full:500 },
-  // Витрина — вариант B («размеренный») из финальной модели фонда.
-  // stockByWeek — новая партия по неделям; непроданное переносится дальше.
-  // Один экземпляр каждой позиции на аккаунт за сезон.
+  // ОБНОВЛЕНО: витрина пересобрана по актуальной таблице призов (2 768 шт за сезон).
+  // stockByWeek — новая партия по неделям, партии растут по кривой 4/7/10/13/15/16/17/18%
+  // от сезонного тиража; непроданное переносится и суммируется со следующей партией.
+  // Один экземпляр каждой позиции на аккаунт ЗА НЕДЕЛЮ.
   shop: [
-    {id:'r100',  name:'100 Robux',             price:750,  type:'Цифровой', stockByWeek:[57,99,142,184,212,227,241,254]},
-    {id:'r500',  name:'500 Robux',             price:1900, type:'Цифровой', stockByWeek:[16,28,40,52,60,64,68,72]},
-    {id:'c1000', name:'Сертификат 1 000 ₽',    price:2300, type:'Цифровой', stockByWeek:[10,17,24,31,36,38,41,43]},
-    {id:'r1100', name:'1 100 Robux',           price:3100, type:'Цифровой', stockByWeek:[6,10,14,19,22,23,24,26]},
-    {id:'c3000', name:'Сертификат 3 000 ₽',    price:4400, type:'Цифровой', stockByWeek:[6,11,15,20,23,24,26,27]},
-    {id:'c5000', name:'Сертификат 5 000 ₽',    price:6000, type:'Цифровой', stockByWeek:[4,6,9,11,13,14,15,16], unlockWeek:4},
+    {id:'r100',   name:'100 Robux',                    price:750,  type:'Цифровой', stockByWeek:[57,99,142,184,212,227,241,254]},
+    {id:'c500f',  name:'Сертификат 500 ₽ · еда',       price:1400, type:'Цифровой', stockByWeek:[6,11,16,21,24,26,27,29]},
+    {id:'c500g',  name:'Сертификат 500 ₽ · товары',    price:1400, type:'Цифровой', stockByWeek:[6,11,16,21,24,26,27,29]},
+    {id:'r500',   name:'500 Robux',                    price:1900, type:'Цифровой', stockByWeek:[16,28,40,52,60,64,68,72]},
+    {id:'c1000f', name:'Сертификат 1 000 ₽ · еда',     price:2300, type:'Цифровой', stockByWeek:[5,8,12,16,18,19,20,22]},
+    {id:'c1000g', name:'Сертификат 1 000 ₽ · товары',  price:2300, type:'Цифровой', stockByWeek:[6,11,16,21,24,26,27,29]},
+    {id:'r1100',  name:'1 100 Robux',                  price:3100, type:'Цифровой', stockByWeek:[6,10,14,19,22,23,24,26]},
+    {id:'c3000',  name:'Сертификат 3 000 ₽',           price:4400, type:'Цифровой', stockByWeek:[5,9,13,17,19,20,22,23]},
+    {id:'c5000',  name:'Сертификат 5 000 ₽',           price:6000, type:'Цифровой', stockByWeek:[3,6,8,10,12,13,14,14]},
   ],
   botBonusRate: 0.50,        // как часто соперник играет бонус-карту вслепую
 };
@@ -2609,6 +2628,7 @@ function rollDeckOrder(){ return shuffle([2,6,4,0,3,1]).concat([7,8,9,5,10,11]);
 function newState(){
   return {
     day:0, wave:0, coins:0, stars:0, rating:0, today:freshToday(), week:freshWeek(), weekIndex:0,
+    weeklyCycle:0,                  // ОБНОВЛЕНО: еженедельные идут по личному прогрессу, а не по календарю
     draws:0, newCount:0, randCount:0, firstForceCount:0, secondForceCount:0, deckOrder:rollDeckOrder(), packIdx:0, packOffers:0, achSteps:0,
     copies:new Array(120).fill(0), opened:new Array(120).fill(false),
     bonus:{},                       // индекс бонус-карты -> количество
@@ -2619,7 +2639,7 @@ function newState(){
     friends:0, refStage:0, refRepeat:0,
     qrUsed:0, qrToday:0,
     matchesToday:0, packsBought:0,
-    prizes:{}, log:[],
+    prizes:{}, prizeWeek:{}, log:[],
     stat:{matches:0,wins:0,losses:0,draws:0,rounds:0,roundsLost:0,roundDraws:0,
           cardsWon:0,cardsLost:0,dups:0,dupsPack:0,dupsPvP:0,starsEarned:0,bonusUsed:0,newCards:0,
           proWins:0,bigWins:0,clsMatches:0,streak:0,bestStreak:0,cleanWin:0,sweep:0,
@@ -2674,10 +2694,9 @@ function variantTune(v){
     randomEveryN: v.prof===1 ? 3 : 0,     // профиль 1: случайная раскладка
     fillEveryN:   v.prof===2 ? 3 : 0, // профиль 2: заполнение самой пустой
     fillMinGap: 0,
-    firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 3,   // первая быстрее, вторая — с прежней интенсивностью
+    firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 0,   // ОБНОВЛЕНО: удержание первой колоды снято
     finishLe2:1.0, finishLe4:1.0,
     dupC:0.70, dupR:0.20, dupL:0.10, achDeck:125,
-    bonusDrawExpress:3, bonusDrawClassic:5, bonusDrawPro:7,
   }, nov);
 }
 let ACTIVE=0;
@@ -2882,6 +2901,15 @@ function openPack(n=5,opts={}){
     const g=grantCard(i<forceNewCount, null);
     if(g) got.push(g);
   }
+  // ОБНОВЛЕНО: если гарантированная новая карта недоступна (потолок волны или сейф),
+  // гарантия конвертируется в 2 бонус-карты — по одной компенсации на каждую невыданную.
+  if(forceNewCount){
+    const shortfall=forceNewCount-got.filter(g=>g.isNew).length;
+    if(shortfall>0){
+      addBonus(2*shortfall);
+      log(`Гарантия новой карты недоступна (${shortfall}) — компенсация ${2*shortfall} бонус-картами`,'warn');
+    }
+  }
   checkAchievements();
   if((CAPTURE || (MODE==='play' && !NORENDER)) && got.length)
     REVEAL.push({title: opts.title || `Пак из ${n} карт`, got: got.slice()});
@@ -2899,6 +2927,8 @@ function repairState(){ // страховка от рассинхрона: эк�
   if(S.newCount===undefined) S.newCount=0;
   if(S.randCount===undefined) S.randCount=0;
   if(!S.today) S.today=freshToday(); if(!S.week) S.week=freshWeek(); if(S.weekIndex===undefined) S.weekIndex=weekOf(Math.max(1,S.day));
+  if(S.weeklyCycle===undefined) S.weeklyCycle=(S.weeklyDone||[]).filter(Boolean).length;
+  if(!S.prizeWeek) S.prizeWeek={};
   for(let i=0;i<120;i++) if(S.copies[i]>0 && !S.opened[i]) S.opened[i]=true;
 }
 function checkAchievements(){
@@ -2937,7 +2967,8 @@ function nextDay(){
   if(wi!==S.weekIndex){
     const prevRating=S.rating||0;
     S.weekIndex=wi;
-    S.week=freshWeek();
+    // ОБНОВЛЕНО: по календарю обнуляется только рейтинг. Счётчики еженедельного задания
+    // привязаны к личному циклу и сбрасываются при открытии следующего цикла.
     S.rating=0;
     log(`Новая неделя: рейтинг обнулён${prevRating?` (${prevRating} → 0)`:''}`,'warn');
   }
@@ -2952,8 +2983,9 @@ function nextDay(){
   const c=CFG.loginCoins[dow]||0; if(c){ addCoins(c,'ежедневный вход'); }
   const b=CFG.loginBonus[dow]||0; if(b){ addBonus(b); }
   if(CFG.loginPackDays.includes(dow)){ openPack(5,{title:'Пак за ежедневный вход'}); log(`Пак за ежедневный вход (день ${dow} цикла): 5 карт`,'good'); }
-  if(S.day===1){ openPack(5,{forceNew:true,title:'Стартовый пак'}); log('Стартовый пак: 5 гарантированно новых карт','good'); }
-  if(S.day===2){ openPack(5,{forceNew:true,title:'Пак второго дня'}); addBonus(3); log('Пак второго дня: 5 новых карт и 3 бонус-карты','good'); }
+  // ОБНОВЛЕНО: гарантия стартовых паков читалась из несуществующего поля forceNew — теперь forceNewCount
+  if(S.day===1){ openPack(5,{forceNewCount:5,title:'Стартовый пак'}); log('Стартовый пак: 5 гарантированно новых карт','good'); }
+  if(S.day===2){ openPack(5,{forceNewCount:5,title:'Пак второго дня'}); addBonus(3); log('Пак второго дня: 5 новых карт и 3 бонус-карты','good'); }
   rollDailyTask();
   checkAchievements();
   render();
@@ -3000,10 +3032,12 @@ function weeklyProgress(i){
 }
 function doWeekly(i){
   if(S.weeklyDone[i]) return;
-  if(weekOf(S.day)!==i) return;
+  // ОБНОВЛЕНО: доступен только текущий цикл; следующий открывается после закрытия текущего.
+  if(i!==(S.weeklyCycle||0)) return;
   const p=weeklyProgress(i); if(p.have<p.need) return;
   const w=CFG.weekly[i];
-  S.weeklyDone[i]=true; addCoins(w.coins,'еженедельные задания'); addBonus(w.bonus);
+  S.weeklyDone[i]=true; S.weeklyCycle=(S.weeklyCycle||0)+1; S.week=freshWeek();
+  addCoins(w.coins,'еженедельные задания'); addBonus(w.bonus);
   if(w.pack){ openPack(5,{title:`Пак за задание недели ${i+1}`}); }
   log(`Еженедельное задание ${i+1}: +${w.coins} монет, ${w.bonus} бонус-карт${w.pack?', пак из 5 карт':''}`,'good');
   render();
@@ -3086,13 +3120,16 @@ function prizeReleased(p){
   return p.stockByWeek.slice(0,w).reduce((a,b)=>a+b,0);
 }
 function prizeRemaining(p){ return Math.max(0,prizeReleased(p)-(S.prizes[p.id]||0)); }
+// ОБНОВЛЕНО: лимит «один экземпляр позиции на аккаунт» действует НА НЕДЕЛЮ, а не на сезон.
+function prizeTakenThisWeek(id){ return (S.prizeWeek||{})[id]===shopWeek(); }
 function buyPrize(id){
   const p=CFG.shop.find(x=>x.id===id); if(!p) return;
-  if((S.prizes[id]||0)>=1){ log('Эту позицию уже покупали — лимит 1 на аккаунт за сезон','warn'); render(); return; }
+  if(prizeTakenThisWeek(id)){ log('Эту позицию уже брали на этой неделе — лимит 1 в неделю','warn'); render(); return; }
   if((p.unlockWeek||1)>shopWeek()){ log(`Позиция откроется на ${p.unlockWeek}-й неделе`,'warn'); render(); return; }
   if(prizeRemaining(p)<=0){ log('Партия этой позиции закончилась','warn'); render(); return; }
   if(!spendCoins(p.price,'витрина')){ log('Недостаточно монет','warn'); render(); return; }
-  S.prizes[id]=1;
+  S.prizes[id]=(S.prizes[id]||0)+1;
+  S.prizeWeek=S.prizeWeek||{}; S.prizeWeek[id]=shopWeek();
   log(`Куплено: ${p.name} за ${p.price} монет`,'good'); render();
 }
 /* ================= PvP ================= */
@@ -3379,13 +3416,19 @@ function nextDayAll(autoActive){
     if(doTasks){
       if(canDoDaily()) doDaily();
       if(!S.socialToday) doSocialDaily();
-      CFG.weekly.forEach((w,k)=>{ const p=weeklyProgress(k); if(!S.weeklyDone[k]&&weekOf(S.day)>=k&&p.have>=p.need) doWeekly(k); });
+      CFG.weekly.forEach((w,k)=>{ const p=weeklyProgress(k); if(!S.weeklyDone[k]&&k===(S.weeklyCycle||0)&&p.have>=p.need) doWeekly(k); });
     }
     if(doQR && S.qrUsed<CFG.qr.limit && S.qrToday<1){
       S.qrToday++; S.qrUsed++; S.today.qrUsed++; addBonus(CFG.qr.bonusPerCode);
     }
     if(doFriend && S.friends<30 && (S.today.friends||0)<1) inviteFriend();
     for(let mm=0;mm<matches;mm++){ if(pvpGateOk() && bkList().length>=3) autoMatch(); }
+    // ОБНОВЛЕНО: задание проверяется ещё раз ПОСЛЕ матчей и QR — иначе задание вида
+    // «сыграть матч» никогда не засчитывалось в автопрогоне, и контур заданий занижался в разы.
+    if(doTasks){
+      if(canDoDaily()) doDaily();
+      CFG.weekly.forEach((w,k)=>{ const p=weeklyProgress(k); if(!S.weeklyDone[k]&&k===(S.weeklyCycle||0)&&p.have>=p.need) doWeekly(k); });
+    }
     CAPTURE=false;
     storeSlot(i);
   });
@@ -3498,7 +3541,8 @@ function botCollection(myUniq,mm,myBkSize,handSize){
   return buildBotOpponent(myUniq,myBkSize,handSize).bkIds;
 }
 function profileModeBkMin(modeKey){
-  return ({exp:3, cls:5, pro:7})[modeKey] || 0;
+  // ОБНОВЛЕНО: минимум карт на руках 5 / 10 / 15 (было 3 / 5 / 7)
+  return ({exp:5, cls:10, pro:15})[modeKey] || 0;
 }
 function pvpGateOk(){
   return availableModes().length>0;
@@ -3560,11 +3604,9 @@ function randomBonusTypeSample(inv, limit){
   shuffle(types);
   return types.slice(0, Math.max(0,Math.min(limit,types.length)));
 }
-function modeBonusDraw(modeKey){
-  return modeKey==='exp' ? TUNE.bonusDrawExpress
-       : modeKey==='cls' ? TUNE.bonusDrawClassic
-       : TUNE.bonusDrawPro;
-}
+// ОБНОВЛЕНО: в матч идёт ВЕСЬ запас бонус-карт игрока — каждый тип одной карточкой.
+// Ограничение осталось одно: не более одной бонус-карты за раунд, один тип — раз за матч.
+function modeBonusDraw(){ return Number.MAX_SAFE_INTEGER; }
 // Соперник получает независимый бонус-пул того же ОБЪЁМА, что и реальный запас игрока,
 // но состав генерируется заново по той же редкостной выдаче 70 / 25 / 5.
 // Затем на матч случайно выбирается ограниченное число типов — так же, как у игрока.
@@ -3625,8 +3667,8 @@ function startMatch(modeKey){
   };
 
   // Игрок: случайная выборка из фактического бонус-запаса.
-  // Бот: отдельный пул такого же размера и той же редкостной структуры,
-  // затем такая же случайная выборка 3 / 5 / 7 типов.
+  // Бот: отдельный пул такого же размера и той же редкостной структуры.
+  // ОБНОВЛЕНО: выборки на матч больше нет — обе стороны видят весь свой запас.
   const drawN=modeBonusDraw(modeKey);
   M.myBonusTypes=randomBonusTypeSample(S.bonus||{},drawN);
 
@@ -4107,10 +4149,10 @@ function renderProfiles(){
   h+=`<div class="pdesc"><b>Профиль ${cur.v.prof} — ${MECH[cur.v.prof]}.</b><br>
       ${PROFILE_DESC[cur.v.prof]}<br>
       <b>${NOV_TITLE[cur.v.nov]}</b> (пороги новизны ${NOV_NUM[cur.v.nov]}): ${NOV_DESC[cur.v.nov]}<br>
-      <span style="color:var(--muted)">День проживается одновременно во всех четырёх коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Для профилей 1 и 2 режим открывается по коллекции 5 / 15 / 30 уникальных карт и дополнительно требует 3 / 5 / 7 карт на руках.</span></div>`;
+      <span style="color:var(--muted)">День проживается одновременно во всех четырёх коллекциях. У каждого варианта своя случайная очередь первых шести колод; последние шесть фиксированы. Режим открывается по коллекции 5 / 15 / 30 уникальных карт и дополнительно требует 5 / 10 / 15 карт на руках.</span></div>`;
 
   const ladder=(TUNE.ladderSteps||[]).map(x=>`${x.count}:${Math.round(x.share*100)}%`).join(' · ');
-  const pvpGate='уникальные 5 / 15 / 30 + на руках 3 / 5 / 7';
+  const pvpGate='уникальные 5 / 15 / 30 + на руках 5 / 10 / 15';
   h+=`<div class="profileparams">
     <div><span>Активный</span><b>${cur.v.id}</b></div>
     <div><span>Новизна</span><b>${NOV_NUM[cur.v.nov]}</b></div>
@@ -4507,6 +4549,8 @@ function render(){
      <span class="pill">День <b>${S.day||'—'}</b> / ${CFG.seasonDays}</span>
      <span class="pill">Коллекция <b>${u}</b>/120</span>
      <span class="pill">Колод <b>${closedDecks()}</b>/12</span>
+     <span class="pill">На руках <b>${S.copies.reduce((a,b)=>a+b,0)}</b></span>
+     <span class="pill">Дублей <b>${S.copies.reduce((a,n)=>a+Math.max(0,n-1),0)}</b></span>
      <span class="pill coin">Монеты <b>${S.coins}</b></span>
      <span class="pill star">Звёзды <b>${duplicateStarTotal()}</b></span>
      <span class="pill">Рейтинг <b>${S.rating}</b></span>
@@ -4526,7 +4570,8 @@ function renderBk(){
   let h=`<h3>Боевая колода <span class="tag">${bk.length} из ${CFG.bkSize}</span></h3>`;
   h+=`<p class="muted">Состав: ${byR.C} обычных · ${byR.R} редких · ${byR.L} легендарных. Плотность ${bkDensity().toFixed(2)}.
       Карт на руках ${own}${own>CFG.bkSize?' — в колоду входят первые 50, состав можно менять в коллекции':' — все входят в колоду автоматически'}.
-      На матч из неё случайно берётся 3 / 5 / 7 игровых карт — по числу раундов режима.</p>`;
+      На матч из неё случайно берётся 3 / 5 / 7 игровых карт — по числу раундов режима.
+      Легендарных в руке не более 60%, редких не более 80%: если карт других редкостей не хватает, лимит ослабляется.</p>`;
   if(!bk.length){ h+='<p class="muted">Колода пуста.</p>'; $('bkpanel').innerHTML=h; return; }
   const sorted=[...bk].sort((a,b)=>({L:0,R:1,C:2})[a.rar]-({L:0,R:1,C:2})[b.rar]
       || b.st.reduce((x,y)=>x+y,0)-a.st.reduce((x,y)=>x+y,0));
@@ -4575,9 +4620,9 @@ function renderTasks(){
       <button onclick="doDaily()" ${canDoDaily()?'':'disabled'}>${S.dailyTaskDone?'Выполнено':'Выполнить'}</button></div>`;
   h+=`<h3>Еженедельные задания</h3>`;
   CFG.weekly.forEach((w,i)=>{
-    const p=weeklyProgress(i), current=weekOf(S.day)===i, past=weekOf(S.day)>i, open=current, ok=p.have>=p.need&&current&&!S.weeklyDone[i];
+    const p=weeklyProgress(i), current=(S.weeklyCycle||0)===i, ok=p.have>=p.need&&current&&!S.weeklyDone[i];
     h+=`<div class="task ${S.weeklyDone[i]?'done':(ok?'ready':'')}">
-        <div><b>Неделя ${i+1}. ${w.t}</b><div class="muted">${w.lvl} · ${w.coins} монет · ${w.bonus} бонус-карт${w.pack?' · пак 5 карт':''} · прогресс ${Math.min(p.have,p.need)}/${p.need}${past&&!S.weeklyDone[i]?' · неделя завершена':(open?'':' · откроется позже')}</div></div>
+        <div><b>Цикл ${i+1}. ${w.t}</b><div class="muted">${w.lvl} · ${w.coins} монет · ${w.bonus} бонус-карт${w.pack?' · пак 5 карт':''} · прогресс ${Math.min(p.have,p.need)}/${p.need}${current?' · текущий цикл':(S.weeklyDone[i]?'':' · откроется после предыдущего')}</div></div>
         <button onclick="doWeekly(${i})" ${ok?'':'disabled'}>${S.weeklyDone[i]?'Выполнено':'Забрать'}</button></div>`;
   });
   h+=`<h3>Социальные задания и друзья</h3>
@@ -5085,13 +5130,13 @@ function renderShop(){
   });
   const w=shopWeek();
   h+=`</div><h3>Витрина <span class="weekpill">неделя ${w}/8</span></h3>
-    <p class="muted">Призы обновляются каждую неделю, а оставшиеся позиции переносятся дальше. Один приз каждого вида можно получить один раз за сезон.</p><div class="shopgrid">`;
+    <p class="muted">Призы обновляются каждую неделю, а нераскупленные экземпляры переносятся и суммируются со следующей партией. Один приз каждого вида можно получить один раз в неделю.</p><div class="shopgrid">`;
   CFG.shop.forEach(p=>{
-    const got=(S.prizes[p.id]||0)>=1, locked=(p.unlockWeek||1)>w, rem=prizeRemaining(p);
+    const got=prizeTakenThisWeek(p.id), locked=(p.unlockWeek||1)>w, rem=prizeRemaining(p);
     const disabled=got||locked||rem<=0||S.coins<p.price;
     h+=`<button class="prize ${got?'got':''} ${locked?'locked':''}" onclick="buyPrize('${p.id}')" ${disabled?'disabled':''}>
       <b>${p.name}</b><div class="price">${p.price} монет</div>
-      <small>${got?'Уже получено':(locked?`Станет доступно на ${p.unlockWeek}-й неделе`:`Доступно сейчас: ${rem}`)}</small>
+      <small>${got?'Взято на этой неделе':(locked?`Станет доступно на ${p.unlockWeek}-й неделе`:`Доступно сейчас: ${rem}`)}</small>
       <small>${p.type}</small></button>`;
   });
   h+='</div>';
@@ -5116,7 +5161,7 @@ function slotMetrics(sl){
   const matches=stat.matches||0, wins=stat.wins||0, losses=stat.losses||0, draws=stat.draws||0;
   const dups=(stat.dups||0);
   const order=(st.deckOrder||[]).slice(0,6).map(d=>CFG.animals[d]).join(' → ');
-  const modeGates={exp:3,cls:5,pro:7};
+  const modeGates={exp:5,cls:10,pro:15};   // ОБНОВЛЕНО
   const modeNames={exp:'Экспресс',cls:'Классика',pro:'Профи'};
   const pvpModes=Object.entries(CFG.modes)
     .filter(([k,m])=>u>=m.access && bk>=modeGates[k])
@@ -5151,7 +5196,7 @@ function renderCompareStats(){
     ['Уникальных карт', x=>x.u],
     ['Физических карт на руках', x=>x.physical],
     ['Карт в БК', x=>x.bk],
-    ['Минимум карт на руках — Экспресс / Классика / Профи', x=>'3 / 5 / 7'],
+    ['Минимум карт на руках — Экспресс / Классика / Профи', x=>'5 / 10 / 15'],
     ['Доступные режимы', x=>x.pvpModes],
     ['Закрыто колод', x=>`${x.closed}/12`],
     ['Минимум карт в одной колоде', x=>x.minDeck],
@@ -5190,7 +5235,7 @@ function renderCompareStats(){
   });
 
   let h=`<div class="striphead"><h3>Статистика всех профилей</h3><span class="tag">горизонтально · 4 варианта</span></div>
-    <p class="muted">Для 1A/1B/2A/2B режим открывается в два этапа: по прогрессу коллекции — 5 / 15 / 30 уникальных карт; для запуска матча дополнительно нужно минимум 3 / 5 / 7 карт на руках для Экспресса / Классики / Профи.</p>`;
+    <p class="muted">Для 1A/1B/2A/2B режим открывается в два этапа: по прогрессу коллекции — 5 / 15 / 30 уникальных карт; для запуска матча дополнительно нужно минимум 5 / 10 / 15 карт на руках для Экспресса / Классики / Профи.</p>`;
 
   if(STATS_LAYOUT==='horizontal'){
     h+=`<div class="stat-horizontal-wrap">
@@ -5248,6 +5293,7 @@ function renderStats(){
     ['Раундов выиграно / проиграно',`${s.rounds} / ${s.roundsLost}`],['Ничьих в раундах',s.roundDraws],
     ['Карт выиграно / потеряно',`${s.cardsWon} / ${s.cardsLost}`],
     ['Дублей получено',s.dups],['Звёзд заработано',s.starsEarned],
+    ['Дублей из паков',s.dupsPack||0],['Дублей из PvP',s.dupsPvP||0],
     ['Паков куплено',S.packsBought],['Бонус-карт применено',s.bonusUsed],
     ['Ежедневных заданий',`${S.dailyDone} / 60`],['Друзей приглашено',S.friends],
     ['QR-кодов',`${S.qrUsed} / ${CFG.qr.limit}`],['Монет заработано',s.coinsEarned||0],['Монет потрачено',s.coinsSpent||0],['Баланс монет',S.coins],['Рейтинг',S.rating],
@@ -5256,15 +5302,33 @@ function renderStats(){
 }
 function renderRules(){
   const st=TUNE.ladderSteps;
-  $('rules').innerHTML=`<details class="devrules">
+  $('rules').innerHTML=`<details class="devrules changelog" open>
+    <summary class="fullbtn">Что обновлено в этой версии <span>правки по согласованным решениям</span></summary>
+    <div class="devrulesbody changelogbody">
+      <ul>
+        <li>Доступ к режимам: 5 / 15 / 30 уникальных карт <b>и</b> 5 / 10 / 15 карт на руках (было 3 / 5 / 7).</li>
+        <li>Лестница колод: 40% приоритетной, 25% на следующие пять, 35% на остаток; коэффициент убыли 0,75.</li>
+        <li>Профиль выдачи зафиксирован как 1A: новизна 0,97 / 0,76 / 0,56 / 0,32, каждая 3-я карта случайна по коллекции.</li>
+        <li>Бонус-карты: вытяжка 3 / 5 / 7 отменена — в матче доступен весь запас, каждый тип одной карточкой, не более одной карты за раунд.</li>
+        <li>Ежедневный вход: 25 монет за цикл, на 4-й день только пак (лишние 10 монет убраны).</li>
+        <li>Стартовые паки 1-го и 2-го дня снова гарантируют 5 новых карт — флаг гарантии читался неверно.</li>
+        <li>Недоступная гарантия новой карты конвертируется в 2 бонус-карты.</li>
+        <li>Еженедельные задания идут по личному прогрессу: следующий цикл открывается после закрытия текущего, срока нет.</li>
+        <li>Витрина пересобрана по актуальной таблице призов: 9 позиций, 2 768 экземпляров, сертификаты 500 ₽ по 1 400 монет; лимит — 1 экземпляр позиции в неделю.</li>
+        <li>Удержание первой колоды до 3-го дня снято.</li>
+      </ul>
+    </div>
+  </details>
+  <details class="devrules">
     <summary class="fullbtn">Служебные правила модели <span>для разработки · игроку не показываются</span></summary>
     <div class="muted devrulesbody">
       <b>Волны.</b> 24 / 40 / 54 / 67 / 79 / 90 / 100 / 108 / 115 / 120 новых карт из паков. Дни 1 / 2 / 4 / 7 / 11 / 16 / 22 / 29 / 37 / 46.<br><br>
       <b>Очередь.</b> Первые 6 колод случайные, последние 6 фиксированы. Первая колода ускоряется каждой ${TUNE.firstForceEvery||2}-й новой картой; после неё вторая — каждой ${TUNE.secondForceEvery||3}-й, если ещё не собрана.<br><br>
       <b>Выдача.</b> Новизна ${Math.round(TUNE.noveltyStart*100)} / ${Math.round(TUNE.novelty30*100)} / ${Math.round(TUNE.novelty60*100)} / ${Math.round(TUNE.novelty85*100)}%. Лестница: ${st.map(s=>Math.round(s.share*100)+'%').join(' / ')}. Дубли по редкости 70 / 20 / 10.<br><br>
-      <b>PvP.</b> Режимы открываются по коллекции: Экспресс 5, Классика 15, Профи 30 уникальных карт. Матчмейкинг — по плотности D=(C+2R+4L)/размер БК, разрыв не более ±8%; дополнительно ±15 уникальных карт. БК бота того же размера, что у игрока. Перед матчем жеребьёвка определяет, кто первым называет характеристику. Далее право выбора характеристики чередуется каждый раунд; отвечающий выбирает карту по уже названной характеристике. Матч всегда играется полностью: Экспресс — 3 раунда, Классика — 5, Профи — 7, независимо от промежуточного счёта. Для профилей 1/2 после открытия режима требуется физическая рука 3 / 5 / 7 карт соответственно.<br><br>
-      <b>Бонус-карты.</b> 34 вида. На матч случайно выбираются типы из запаса: 3 / 5 / 7 для Экспресса / Классики / Профи. Бот получает аналог текущего фактического запаса бонусов игрока с отклонением общего объёма до ±8%; в раунде выбирает лучший подходящий бонус только из своей случайной выборки. Один тип можно использовать не более одного раза за матч. Ярость ×1,6 работает на карте любой редкости.<br><br>
-      <b>Паки за звёзды.</b> 35★ / 45★ / 60★ / 90★. Epic/Loot гарантируют новые карты только среди доступных на текущий момент.
+      <b>PvP.</b> Режимы открываются по коллекции: Экспресс 5, Классика 15, Профи 30 уникальных карт. Матчмейкинг — по плотности D=(C+2R+4L)/размер БК, разрыв не более ±8%; дополнительно ±15 уникальных карт. БК бота того же размера, что у игрока. Перед матчем жеребьёвка определяет, кто первым называет характеристику. Далее право выбора характеристики чередуется каждый раунд; отвечающий выбирает карту по уже названной характеристике. Матч всегда играется полностью: Экспресс — 3 раунда, Классика — 5, Профи — 7, независимо от промежуточного счёта. После открытия режима требуется физическая рука 5 / 10 / 15 карт соответственно.<br><br>
+      <b>Бонус-карты.</b> 34 вида. В матче доступен весь запас игрока: каждый тип показан одной карточкой, за раунд можно применить не более одной бонус-карты, один тип — не более раза за матч. Бот получает аналог фактического запаса игрока по объёму и редкостной структуре. Бонус выбирается до вскрытия карты соперника. Ярость ×1,6 работает на карте любой редкости.<br><br>
+      <b>Паки за звёзды.</b> Стандартный 35★ — 5 карт без гарантий. Бонус-пак 45★ — 4 карты и гарантированная бонус-карта. Эпик-пак 60★ — 5 карт, минимум 1 новая. Лут-пак 90★ — 5 карт, минимум 2 новые и 1 бонус-карта. Гарантия работает только среди карт, доступных на текущий момент; если новых в пределах потолка и сейфа нет, каждая невыданная гарантия конвертируется в 2 бонус-карты.<br><br>
+      <b>Витрина.</b> 9 позиций, 2 768 экземпляров за сезон. Партия выкладывается каждый понедельник и растёт по ходу сезона; нераскупленное переносится. Один экземпляр каждой позиции на аккаунт в неделю.
     </div>
   </details>`;
 }
@@ -5292,7 +5356,7 @@ function autoDays(n){
     nextDay();
     if(canDoDaily()) doDaily();
     if(!S.socialToday) doSocialDaily();
-    CFG.weekly.forEach((w,i)=>{ const p=weeklyProgress(i); if(!S.weeklyDone[i]&&weekOf(S.day)>=i&&p.have>=p.need) doWeekly(i); });
+    CFG.weekly.forEach((w,i)=>{ const p=weeklyProgress(i); if(!S.weeklyDone[i]&&i===(S.weeklyCycle||0)&&p.have>=p.need) doWeekly(i); });
   }
   render();
 }
@@ -5403,7 +5467,7 @@ function renderTune(){
     <button onclick="resetTune()">Значения по умолчанию</button>
     <button onclick="toggleTune()">Свернуть</button>
   </div>
-  <div class="muted" style="margin-top:6px">Базовые значения: первая колода — форс каждой 2-й новой карты, вторая после неё — каждой 3-й; дубли 70/20/10; достижение 125 монет за колоду; сейф 10 карт; весь запас бонусов в матче.</div>`;
+  <div class="muted" style="margin-top:6px">Базовые значения: лестница 40% / 5×5% / остаток 35% с убылью 0,75; первая колода — форс каждой 2-й новой карты, вторая после неё — каждой 3-й; дубли 70/20/10; достижение 125 монет за колоду; сейф 10 карт; весь запас бонусов в матче.</div>`;
   $('tunepanel').innerHTML=h;
 }
 function ladderWarn(){
@@ -5487,6 +5551,8 @@ function showTab(name){
 function paintAppbar(){
   const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v;};
   set('ab_day', S.day+'/60'); set('ab_cards', uniq()+'/120');
+  set('ab_hand', S.copies.reduce((a,b)=>a+b,0));
+  set('ab_dups', S.copies.reduce((a,n)=>a+Math.max(0,n-1),0));
   set('ab_coins', Math.round(S.coins)); set('ab_stars', duplicateStarTotal());
 
   const pe=document.getElementById('ab_profile');
