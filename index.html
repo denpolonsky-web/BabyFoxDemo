@@ -2209,9 +2209,9 @@ const TUNE = {
   decay: 0.75,         // ОБНОВЛЕНО: коэффициент убыли 0,75 (плавный переход между колодами)
   fillEveryN: 0,       // каждая N-я карта в самую незаполненную колоду (0 — выкл)
   fillMinGap: 0,       // требуемое отставание от средней заполненности, в картах
-  firstForceEvery: 3,   // ОБНОВЛЕНО: пока не закрыта первая колода — каждая 3-я новая карта туда (было 2)
-  secondForceEvery: 4,  // ОБНОВЛЕНО: после первой — каждая 4-я новая карта во вторую (было 3)
-  firstDeckMinDay: 7,  // ОБНОВЛЕНО: первая колода не закрывается раньше 7-го дня (держим последнюю карту)
+  firstForceEvery: 2,   // пока не закрыта первая колода: каждая 2-я новая карта идёт туда
+  secondForceEvery: 3,  // после первой: каждая 3-я новая карта во вторую, если она ещё не собрана
+  firstDeckMinDay: 5,  // снято: первая колода закрывается тогда, когда соберётся
   finishLe2: 1.0, finishLe4: 1.0,        // добивание почти собранных колод выключено (=1)
   dupC: 0.70, dupR: 0.20, dupL: 0.10,
   achDeck: 125,
@@ -2699,7 +2699,7 @@ function variantTune(v){
     randomEveryN: v.prof===1 ? 3 : 0,     // профиль 1: случайная раскладка
     fillEveryN:   v.prof===2 ? 3 : 0, // профиль 2: заполнение самой пустой
     fillMinGap: 0,
-    firstForceEvery: 3, secondForceEvery: 4, firstDeckMinDay: 7,   // ОБНОВЛЕНО: форс 3/4, первая колода не раньше 7-го дня
+    firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 5,   // ОБНОВЛЕНО: удержание первой колоды снято
     finishLe2:1.0, finishLe4:1.0,
     dupC:0.70, dupR:0.20, dupL:0.10, achDeck:125,
   }, nov);
@@ -2765,11 +2765,7 @@ function pickNewCard(){ // возвращает индекс карты или n
   // Если до минимального дня в ней осталась одна карта, временно придерживаем только эту последнюю карту.
   const firstDeckNow=playerOrder()[0];
   const firstMissingNow=deckCards(firstDeckNow).filter(id=>!S.opened[id] && !locked.includes(id));
-  // ОБНОВЛЕНО: пока не наступил firstDeckMinDay, первая колода не закрывается —
-  // придерживаем ОДНУ (случайную) недостающую карту, даже если колода добралась сразу
-  // несколькими картами (условие length===1 раньше проскакивалось при быстрой выдаче).
-  const holdEarlyFirst=(TUNE.firstDeckMinDay>0 && S.day<TUNE.firstDeckMinDay && firstMissingNow.length>=1)
-        ? firstMissingNow[firstMissingNow.length-1] : null;
+  const holdEarlyFirst=(TUNE.firstDeckMinDay>0 && S.day<TUNE.firstDeckMinDay && firstMissingNow.length===1) ? firstMissingNow[0] : null;
   const free=id=>!S.opened[id] && !locked.includes(id) && id!==holdEarlyFirst;
   const all=[]; for(let i=0;i<120;i++) if(free(i)) all.push(i);
   if(!all.length) return null;
