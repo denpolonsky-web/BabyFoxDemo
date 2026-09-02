@@ -753,6 +753,11 @@ button.c3-st:active{background:rgba(232,137,43,.2)}
 .pstat{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 7px;border-radius:6px;
   background:rgba(0,0,0,.28);border:1px solid transparent;color:var(--ink);font-size:11px;
   font-family:inherit;width:100%;text-align:left;cursor:pointer}
+.swapnote{display:block;font-size:10px;color:#c9a3ff;font-weight:700;margin-top:2px}
+.statfinal s{opacity:.5;font-weight:600;margin-right:3px}
+.statfinal{color:#ffd24a}
+.statbon{display:block;font-size:8px;font-style:normal;color:#bfe8a4;margin-top:1px;font-weight:700}
+
 .pstat span{color:var(--muted)}
 .pstat b{font-variant-numeric:tabular-nums;font-size:12.5px}
 .pstat.top{border-color:#5f4a33}
@@ -2204,9 +2209,9 @@ const TUNE = {
   decay: 0.75,         // ОБНОВЛЕНО: коэффициент убыли 0,75 (плавный переход между колодами)
   fillEveryN: 0,       // каждая N-я карта в самую незаполненную колоду (0 — выкл)
   fillMinGap: 0,       // требуемое отставание от средней заполненности, в картах
-  firstForceEvery: 2,   // пока не закрыта первая колода: каждая 2-я новая карта идёт туда
-  secondForceEvery: 3,  // после первой: каждая 3-я новая карта во вторую, если она ещё не собрана
-  firstDeckMinDay: 0,  // снято: первая колода закрывается тогда, когда соберётся
+  firstForceEvery: 3,   // ОБНОВЛЕНО: пока не закрыта первая колода — каждая 3-я новая карта туда (было 2)
+  secondForceEvery: 4,  // ОБНОВЛЕНО: после первой — каждая 4-я новая карта во вторую (было 3)
+  firstDeckMinDay: 7,  // ОБНОВЛЕНО: первая колода не закрывается раньше 7-го дня (держим последнюю карту)
   finishLe2: 1.0, finishLe4: 1.0,        // добивание почти собранных колод выключено (=1)
   dupC: 0.70, dupR: 0.20, dupL: 0.10,
   achDeck: 125,
@@ -2296,7 +2301,7 @@ const CFG = {
     {id:'c3000',  name:'Сертификат 3 000 ₽',           price:4400, type:'Цифровой', stockByWeek:[5,9,13,17,19,20,22,23]},
     {id:'c5000',  name:'Сертификат 5 000 ₽',           price:6000, type:'Цифровой', stockByWeek:[3,6,8,10,12,13,14,14]},
   ],
-  botBonusRate: 0.50,        // как часто соперник играет бонус-карту вслепую
+  // botBonusRate удалён: бот применяет бонусы осознанно, как игрок
 };
 
 /* ================= ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ================= */
@@ -2394,7 +2399,7 @@ const BONUS = [];
 
   add(['Щит'],'shield',0,'R','Проигранная карта не переходит сопернику');
   add(['Отмена'],'cancel',0,'R','Отменяет бонус-карту соперника в этом раунде');
-  add(['Подмена'],'swap',0,'L','Сравнение идёт по сильнейшей характеристике твоей карты');
+  add(['Подмена'],'swap',0,'L','Тема раунда не меняется: на вашей карте сравниваемая характеристика меняется местами с вашей сильнейшей — по теме раунда встаёт максимум карты');
   add(['Ярость'],'rage',0,'L','×1,6 к сравниваемой характеристике своей карты');
 })();
 
@@ -2694,7 +2699,7 @@ function variantTune(v){
     randomEveryN: v.prof===1 ? 3 : 0,     // профиль 1: случайная раскладка
     fillEveryN:   v.prof===2 ? 3 : 0, // профиль 2: заполнение самой пустой
     fillMinGap: 0,
-    firstForceEvery: 2, secondForceEvery: 3, firstDeckMinDay: 0,   // ОБНОВЛЕНО: удержание первой колоды снято
+    firstForceEvery: 3, secondForceEvery: 4, firstDeckMinDay: 7,   // ОБНОВЛЕНО: форс 3/4, первая колода не раньше 7-го дня
     finishLe2:1.0, finishLe4:1.0,
     dupC:0.70, dupR:0.20, dupL:0.10, achDeck:125,
   }, nov);
@@ -2760,7 +2765,11 @@ function pickNewCard(){ // возвращает индекс карты или n
   // Если до минимального дня в ней осталась одна карта, временно придерживаем только эту последнюю карту.
   const firstDeckNow=playerOrder()[0];
   const firstMissingNow=deckCards(firstDeckNow).filter(id=>!S.opened[id] && !locked.includes(id));
-  const holdEarlyFirst=(TUNE.firstDeckMinDay>0 && S.day<TUNE.firstDeckMinDay && firstMissingNow.length===1) ? firstMissingNow[0] : null;
+  // ОБНОВЛЕНО: пока не наступил firstDeckMinDay, первая колода не закрывается —
+  // придерживаем ОДНУ (случайную) недостающую карту, даже если колода добралась сразу
+  // несколькими картами (условие length===1 раньше проскакивалось при быстрой выдаче).
+  const holdEarlyFirst=(TUNE.firstDeckMinDay>0 && S.day<TUNE.firstDeckMinDay && firstMissingNow.length>=1)
+        ? firstMissingNow[firstMissingNow.length-1] : null;
   const free=id=>!S.opened[id] && !locked.includes(id) && id!==holdEarlyFirst;
   const all=[]; for(let i=0;i<120;i++) if(free(i)) all.push(i);
   if(!all.length) return null;
@@ -3163,7 +3172,8 @@ function switchTo(i){
 /* ===== Автоматический матч (для фонового прогона дня) ===== */
 
 function simBonusPick(types,used,statIdx,cardId){
-  if(Math.random()>=CFG.botBonusRate) return null;
+  // ОБНОВЛЕНО: бот больше не играет бонус «вслепую» с вероятностью 50%.
+  // Он выбирает так же, как игрок: применяет лучший полезный бонус, если тот даёт выгоду.
   const usedSet=new Set(used||[]);
   const list=(types||[])
     .filter(i=>!usedSet.has(i) && BONUS[i])
@@ -3191,13 +3201,16 @@ function simResolveRound(myCard,botCard,initialStat,myBonusIdx,botBonusIdx){
   if(c1&&!c0) side[0].bonus=null;
 
   let statIdx=initialStat;
-  const sw0=!!(side[0].bonus&&side[0].bonus.type==='swap');
-  const sw1=!!(side[1].bonus&&side[1].bonus.type==='swap');
-  if(sw0!==sw1){
-    const s=sw0?0:1;
-    const vals=CARDS[side[s].card].st;
-    statIdx=vals.indexOf(Math.max(...vals));
-  }
+  // ОБНОВЛЕНО: Подмена НЕ меняет сравниваемую характеристику (тему раунда).
+  // Она свапает на карте владельца сравниваемый стат с максимальным статом этой карты —
+  // значение по теме раунда становится равным максимуму карты. Поле соперника не трогается.
+  const swBase=[CARDS[side[0].card].st.slice(), CARDS[side[1].card].st.slice()];
+  [0,1].forEach(s=>{
+    if(side[s].bonus&&side[s].bonus.type==='swap'){
+      const v=swBase[s]; const mi=v.indexOf(Math.max(...v));
+      if(mi!==statIdx){ const t=v[statIdx]; v[statIdx]=v[mi]; v[mi]=t; }
+    }
+  });
 
   for(let s=0;s<2;s++){
     const b=side[s].bonus; if(!b||['cancel','swap'].includes(b.type)) continue;
@@ -3210,8 +3223,8 @@ function simResolveRound(myCard,botCard,initialStat,myBonusIdx,botBonusIdx){
     else if(b.type==='shield') side[s].shield=true;
   }
 
-  const myV=Math.max(0,Math.round(CARDS[myCard].st[statIdx]*side[0].mul)+side[0].add);
-  const botV=Math.max(0,Math.round(CARDS[botCard].st[statIdx]*side[1].mul)+side[1].add);
+  const myV=Math.max(0,Math.round(swBase[0][statIdx]*side[0].mul)+side[0].add);
+  const botV=Math.max(0,Math.round(swBase[1][statIdx]*side[1].mul)+side[1].add);
   return {statIdx,myV,botV,myShield:side[0].shield,botShield:side[1].shield};
 }
 
@@ -3299,10 +3312,10 @@ function autoMatch(){
   const botBk=bot.bkIds;
   const botHand=drawHand(botBk,m);
 
-  const drawN=modeBonusDraw(mode);
-  const myTypes=randomBonusTypeSample(S.bonus||{},drawN);
+  // ОБНОВЛЕНО: вытяжка типов отменена — в матч идёт ВЕСЬ запас (и игрока, и бота).
+  const myTypes=Object.entries(S.bonus||{}).filter(([,n])=>n>0).map(([i])=>+i);
   const botInv=makeBotBonusInventory(S.bonus||{});
-  const botTypes=randomBonusTypeSample(botInv,drawN);
+  const botTypes=Object.entries(botInv||{}).filter(([,n])=>n>0).map(([i])=>+i);
   const myUsed=[],botUsed=[];
 
   let myWins=0,botWins=0,lostCards=0;
@@ -3669,12 +3682,12 @@ function startMatch(modeKey){
   // Игрок: случайная выборка из фактического бонус-запаса.
   // Бот: отдельный пул такого же размера и той же редкостной структуры.
   // ОБНОВЛЕНО: выборки на матч больше нет — обе стороны видят весь свой запас.
-  const drawN=modeBonusDraw(modeKey);
-  M.myBonusTypes=randomBonusTypeSample(S.bonus||{},drawN);
+  // ОБНОВЛЕНО: обе стороны берут в матч ВЕСЬ свой запас, без случайной выборки типов.
+  M.myBonusTypes=Object.entries(S.bonus||{}).filter(([,n])=>n>0).map(([i])=>+i);
 
   M.botBonusInv=makeBotBonusInventory(S.bonus||{});
-  M.botBonusTypes=randomBonusTypeSample(M.botBonusInv,drawN);
-  M.botStock=M.botBonusTypes.length;
+  M.botBonusTypes=Object.entries(M.botBonusInv||{}).filter(([,n])=>n>0).map(([i])=>+i);
+  M.botStock=Object.values(M.botBonusInv||{}).reduce((a,n)=>a+(n||0),0);
 
   M.botMeta.playerBonusStock=Object.values(S.bonus||{}).reduce((a,n)=>a+(n||0),0);
   M.botMeta.botBonusStock=Object.values(M.botBonusInv||{}).reduce((a,n)=>a+(n||0),0);
@@ -3927,7 +3940,9 @@ function playRound(cardId,stat){
 
   // Бонус соперника выбирается после того, как известны его карта и названная характеристика,
   // но до вскрытия карты игрока.
-  if(!M.botBonusLocked && M.botStock>0 && Math.random()<CFG.botBonusRate){
+  // ОБНОВЛЕНО: бот применяет бонус осознанно (не «вслепую» с шансом 50%):
+  // берёт лучший полезный бонус, если тот меняет исход в его пользу; иначе бережёт запас.
+  if(!M.botBonusLocked && M.botStock>0){
     M.botBonusPicked=chooseBotTurnBonus(statIdx,botCard);
   }else{
     M.botBonusPicked=null;
@@ -3955,13 +3970,15 @@ function playRound(cardId,stat){
   const botEff = botCancelled ? null : botB;
 
   // Если обе стороны сыграли Подмену, они взаимно гасятся и остаётся исходная характеристика.
+  // ОБНОВЛЕНО: Подмена НЕ меняет сравниваемую характеристику. Тема раунда (statIdx) остаётся.
+  // На карте владельца сравниваемый стат свапается с максимальным статом этой же карты,
+  // поэтому по теме раунда его значение становится равным максимуму карты. Соперник не затрагивается.
   const mySwap=!!(myEff&&myEff.type==='swap'), botSwap=!!(botEff&&botEff.type==='swap');
-  if(mySwap!==botSwap){
-    const cid=mySwap?myCard:botCard;
-    statIdx=CARDS[cid].st.indexOf(Math.max(...CARDS[cid].st));
-  }
+  const swMy=CARDS[myCard].st.slice(), swBot=CARDS[botCard].st.slice();
+  if(mySwap){ const mi=swMy.indexOf(Math.max(...swMy)); if(mi!==statIdx){ const t=swMy[statIdx]; swMy[statIdx]=swMy[mi]; swMy[mi]=t; } }
+  if(botSwap){ const mi=swBot.indexOf(Math.max(...swBot)); if(mi!==statIdx){ const t=swBot[statIdx]; swBot[statIdx]=swBot[mi]; swBot[mi]=t; } }
 
-  const baseMy=CARDS[myCard].st[statIdx], baseBot=CARDS[botCard].st[statIdx];
+  const baseMy=swMy[statIdx], baseBot=swBot[statIdx];
   let myMul=1, botMul=1, myAdd=0, botAdd=0;
   const collectEffect=(b,who)=>{
     if(!b||['cancel','swap'].includes(b.type)) return;
@@ -3992,7 +4009,7 @@ function playRound(cardId,stat){
     consumeBotBonus(M.botBonusPicked);
   }
   // исход
-  let res;
+  let res, cardActuallyLost=false;
   if(myV>botV) res='win'; else if(botV>myV) res='lose'; else res='draw';
   const sname=CFG.statNames[statIdx];
   let txt=`Раунд ${M.round}: ${CARDS[myCard].name} (${sname} ${myV}) против ${CARDS[botCard].name} (${botV})`;
@@ -4014,7 +4031,7 @@ function playRound(cardId,stat){
     else {
       const before=S.copies[myCard]||0;
       if(before>1){ const v=CFG.starValue[CARDS[myCard].rar]; S.stars=Math.max(0,S.stars-v); }
-      S.copies[myCard]=Math.max(0,before-1); S.stat.cardsLost++; M.lostCards++; txt+=' — поражение, экземпляр потерян';
+      S.copies[myCard]=Math.max(0,before-1); S.stat.cardsLost++; M.lostCards++; cardActuallyLost=true; txt+=' — поражение, экземпляр потерян';
     }
   } else { M.roundDraws++; S.stat.roundDraws++; txt+=' — ничья, карты остались у владельцев'; }
   M.logs.unshift(txt);
@@ -4023,11 +4040,12 @@ function playRound(cardId,stat){
   (M.history=M.history||[]).push({ n:M.round, myCard, botCard, statIdx, myV, botV,
       res: myV>botV?'win':(botV>myV?'lose':'draw'),
       myBonusName: myB2?myB2.name:null, botBonusName: botB?botB.name:null,
-      myBonusIdx: myB2?M.myBonus:null, botBonusIdx: botB?M.botBonusPicked:null, lost: (myV<botV) });
+      myBonusIdx: myB2?M.myBonus:null, botBonusIdx: botB?M.botBonusPicked:null, lost: cardActuallyLost, shielded: (res==='lose'&&myShield) });
   M.lastRound={ myCard, botCard, statIdx, myV, botV,
                 res: myV>botV?'win':(botV>myV?'lose':'draw'),
                 myBonusName: myB2?myB2.name:null, botBonusName: botB?botB.name:null,
-                myBonusIdx: myB2?M.myBonus:null, botBonusIdx: botB?M.botBonusPicked:null };
+                myBonusIdx: myB2?M.myBonus:null, botBonusIdx: botB?M.botBonusPicked:null,
+                mySwapped: mySwap, botSwapped: botSwap };
   M.round++; M.scheduledNamer = M.scheduledNamer==='me'?'bot':'me';
   if(!NORENDER){
     stopTurnTimer();
@@ -4071,7 +4089,7 @@ function roundsTable(history){
   history.forEach(r=>{
     const mc=CARDS[r.myCard], bc=CARDS[r.botCard];
     const cls=r.res==='win'?'w':(r.res==='lose'?'l':'d');
-    const verd=r.res==='win'?'забрали карту':(r.res==='lose'?'карта ушла':'ничья');
+    const verd=r.res==='win'?'забрали карту':(r.res==='lose'?(r.shielded?'Щит сохранил карту':'карта ушла'):'ничья');
     s+=`<div class="rrow ${cls}">
       <span class="rn">${r.n}</span>
       <span class="rst">${CFG.statNames[r.statIdx]}</span>
@@ -4718,7 +4736,7 @@ function bonusGain(b, myV, cardId, statIdx){
 }
 
 // Одна игровая карта. mode: 'name' — характеристики кликабельны; 'pick' — карта кликабельна целиком; 'flat' — только показ
-function battleCardHTML(id,{mode='flat',hotStat=null,selected=false,onCard='',onStat='',badge=''}={}){
+function battleCardHTML(id,{mode='flat',hotStat=null,selected=false,onCard='',onStat='',badge='',finalVal=null,bonusName=null}={}){
   const c=CARDS[id];
   const sorted=c.st.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
   const top=sorted[0].i, second=sorted[1].i;
@@ -4729,8 +4747,13 @@ function battleCardHTML(id,{mode='flat',hotStat=null,selected=false,onCard='',on
     <div class="pstats">`;
   c.st.forEach((v,si)=>{
     const cls = si===hotStat ? 'hot' : ((si===top||si===second)?'top':'');
+    // На сравниваемой характеристике показываем ИТОГ с бонусом (если передан) — база зачёркнута, рядом финал.
+    const showFinal = (si===hotStat && finalVal!==null && finalVal!==undefined && finalVal!==v);
+    const valHtml = showFinal
+      ? `<b class="statfinal"><s>${v}</s> ${finalVal}${bonusName?`<em class="statbon">${bonusName}</em>`:''}</b>`
+      : `<b>${v}</b>`;
     if(mode==='name') h+=`<button class="pstat ${cls}" onclick="${onStat.replace('{id}',id).replace('{si}',si)}"><span>${CFG.statNames[si]}</span><b>${v}</b></button>`;
-    else h+=`<div class="pstat ${cls}"><span>${CFG.statNames[si]}</span><b>${v}</b></div>`;
+    else h+=`<div class="pstat ${cls}"><span>${CFG.statNames[si]}</span>${valHtml}</div>`;
   });
   h+='</div></div>';
   return h;
@@ -4895,7 +4918,7 @@ function renderMatch(){
       return `<span class="slotresult ${result}">${result==='win'?'выиграл':(result==='lose'?'проиграл':'ничья')}</span>
         <div class="slotopen">
           <div class="slotduo ${bonusIdx===null||bonusIdx===undefined?'solo':'withbonus'}">
-            <div class="slotmain">${battleCardHTML(cid,{mode:'flat',hotStat:BR.statIdx})}</div>
+            <div class="slotmain">${battleCardHTML(cid,{mode:'flat',hotStat:BR.statIdx,finalVal:(mine?BR.myV:BR.botV),bonusName:(mine?BR.myBonusName:BR.botBonusName)})}</div>
             ${slotBonus(bonusIdx)}
           </div>
         </div>`;
@@ -4906,7 +4929,7 @@ function renderMatch(){
 
   h+=`<div class="playboard">
     <div class="boardmid">
-      <div class="roundstat"><b>${shownStat===null||shownStat===undefined?'Ждём выбора игрока':'Играем по '+CFG.statPlayNames[shownStat]}</b></div>
+      <div class="roundstat"><b>${shownStat===null||shownStat===undefined?'Ждём выбора игрока':'Играем по '+CFG.statPlayNames[shownStat]}</b>${(BR&&(BR.mySwapped||BR.botSwapped))?`<span class="swapnote">Подмена: на ${BR.mySwapped&&BR.botSwapped?'обеих картах':(BR.mySwapped?'вашей карте':'карте соперника')} максимум переставлен на ${CFG.statPlayNames[BR.statIdx]}</span>`:''}</div>
       <div class="versus">СРАВНЕНИЕ КАРТ</div>
     </div>
     <div class="playslot op"><span class="slotlabel">Соперник</span>${slotCard('op')}</div>
