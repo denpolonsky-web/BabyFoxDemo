@@ -2647,11 +2647,13 @@ function newState(){
     friends:0, refStage:0, refRepeat:0,
     qrUsed:0, qrToday:0,
     matchesToday:0, packsBought:0,
+    tossStreak:0,                   // подряд проигранных жеребьёвок (для компенсации в матчах с ботом)
     prizes:{}, prizeWeek:{}, log:[],
     stat:{matches:0,wins:0,losses:0,draws:0,rounds:0,roundsLost:0,roundDraws:0,
           cardsWon:0,cardsLost:0,dups:0,dupsPack:0,dupsPvP:0,starsEarned:0,bonusUsed:0,newCards:0,
           proWins:0,bigWins:0,clsMatches:0,streak:0,bestStreak:0,cleanWin:0,sweep:0,
-          debuffUsed:0,legBonusUsed:0,statWin:[0,0,0,0],cardsGotToday:0,newCardsToday:0,coinsEarned:0,coinsSpent:0,coinSources:{},coinSpend:{}},
+          debuffUsed:0,legBonusUsed:0,statWin:[0,0,0,0],cardsGotToday:0,newCardsToday:0,coinsEarned:0,coinsSpent:0,coinSources:{},coinSpend:{},
+          tossWins:0,tossLosses:0,tossMaxStreak:0,tossComp:0},
     achDecks:new Array(12).fill(false), achBk:false, achFull:false,
     seasonOver:false,
   };
@@ -3328,6 +3330,41 @@ function simFinishMatch(modeKey,myWins,botWins,lostCards,history,botMeta){
   LAST_MATCH={day:S.day,mode:m.name,result,my:myWins,op:botWins,coins,rat,lost:lostCards,history:history||[],botMeta:botMeta||null};
 }
 
+/* ===== ЖЕРЕБЬЁВКА С КОМПЕНСАЦИЕЙ (только матчи с ботом) =====
+   Правило матча не меняется: жребий определяет ТОЛЬКО первый ход,
+   дальше право назвать характеристику строго чередуется каждый раунд.
+   Меняется одно — монетка перестаёт быть слепой. Игра считает, сколько
+   жеребьёвок подряд игрок проиграл, и после порога подыгрывает ему:
+   вес игрока = 1 + шаг × (серия − порог + 1), вес бота = 1,
+   шанс игрока = вес / (вес + 1). Любая выигранная жеребьёвка обнуляет серию.
+   Компенсация односторонняя и применима только потому, что соперник — бот;
+   в PvP между двумя живыми игроками так делать нельзя (у обеих сторон
+   «личный шанс» в сумме не даёт единицу), там нужна весовая форма с обеих сторон.
+   Параметры подобраны прогоном: порог 3 / шаг 1,0 / потолок 6 держат среднюю
+   долю выигранных жеребьёвок на 52% и винрейт на 50,4% (то есть баланс
+   не сдвигается), но обрезают максимальную серию проигранных жеребьёвок с 14 до 8. */
+const TOSS_COMP={ threshold:3, step:1.0, cap:6 };
+function tossWinChance(){
+  const s=S.tossStreak||0;
+  if(s<TOSS_COMP.threshold) return 0.5;
+  const w=1+TOSS_COMP.step*Math.min(s-TOSS_COMP.threshold+1,TOSS_COMP.cap);
+  return w/(w+1);
+}
+function rollFirstNamer(){
+  const p=tossWinChance();
+  if(p>0.5) S.stat.tossComp=(S.stat.tossComp||0)+1;
+  const meFirst=Math.random()<p;
+  if(meFirst){
+    S.stat.tossWins=(S.stat.tossWins||0)+1;
+    S.tossStreak=0;
+  }else{
+    S.stat.tossLosses=(S.stat.tossLosses||0)+1;
+    S.tossStreak=(S.tossStreak||0)+1;
+    S.stat.tossMaxStreak=Math.max(S.stat.tossMaxStreak||0,S.tossStreak);
+  }
+  return meFirst?'me':'bot';
+}
+
 function autoMatch(){
   const av=availableModes().filter(k=>bkList().length>=CFG.modes[k].cards);
   const mode=av.includes('pro')?'pro':(av.includes('cls')?'cls':(av.includes('exp')?'exp':null));
@@ -3347,7 +3384,7 @@ function autoMatch(){
   const myUsed=[],botUsed=[];
 
   let myWins=0,botWins=0,lostCards=0;
-  let namer=Math.random()<0.5?'me':'bot'; // жеребьёвка только первого выбирающего
+  let namer=rollFirstNamer(); // жеребьёвка только первого выбирающего, дальше чередование
   const history=[];
 
   for(let round=1; round<=m.cards && myHand.length && botHand.length; round++){
@@ -3688,7 +3725,7 @@ function startMatch(modeKey){
   const myHand=drawHand(bk.map(c=>c.id),m);
   const bot=buildBotOpponent(uniq(),bk.length,m.cards);
   const botHand=drawHand(bot.bkIds,m);
-  const first=Math.random()<0.5?'me':'bot';
+  const first=rollFirstNamer();
 
   M={
     mode:modeKey,m,myHand,botHand,myWins:0,botWins:0,roundDraws:0,round:1,
@@ -5350,6 +5387,10 @@ function renderStats(){
     ['Матчей сыграно',s.matches],['Побед / ничьих / поражений',`${s.wins} / ${s.draws} / ${s.losses}`],
     ['Винрейт',`${Math.round(100*s.wins/tot)}%`],['Доля ничьих',`${Math.round(100*s.draws/tot)}%`],
     ['Раундов выиграно / проиграно',`${s.rounds} / ${s.roundsLost}`],['Ничьих в раундах',s.roundDraws],
+    ['Жеребьёвок выиграно / проиграно',`${s.tossWins||0} / ${s.tossLosses||0}`],
+    ['Доля выигранных жеребьёвок',`${Math.round(100*(s.tossWins||0)/Math.max(1,(s.tossWins||0)+(s.tossLosses||0)))}%`],
+    ['Худшая серия проигранных жеребьёвок',s.tossMaxStreak||0],
+    ['Жеребьёвок с компенсацией',`${s.tossComp||0} (сейчас серия ${S.tossStreak||0}, шанс ${Math.round(100*tossWinChance())}%)`],
     ['Карт выиграно / потеряно',`${s.cardsWon} / ${s.cardsLost}`],
     ['Дублей получено',s.dups],['Звёзд заработано',s.starsEarned],
     ['Дублей из паков',s.dupsPack||0],['Дублей из PvP',s.dupsPvP||0],
