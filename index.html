@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BabyFox Лесная лига</title>
+<title>BabyFox Лесная лига — DEMO · GDD strict bot ±8 + characteristic lottery · contextual hand prompt v58</title>
 <style>
 :root{
   --bg:#0E1310; --panel:#172019; --panel2:#1E2A21; --line:#2C3A2F;
@@ -3519,6 +3519,19 @@ function resetAll(){ if(confirm('Начать сезон заново?')){ WELCO
   $('reveal').style.display='none'; initSlots(); render(); } }
 // Бот-соперник: коллекция в коридоре матчмейкинга, боевая колода того же размера,
 // что и у игрока (реальный соперник тоже теряет экземпляры в матчах).
+/* ===== СИЛА СОПЕРНИКА (только матчи с ботом) =====
+   Бот не начинает ошибаться — он по-прежнему называет сильнейшую пару и отвечает
+   сильнейшей доступной картой. Ослабляется его КОЛОДА, а не голова.
+   Перед каждым матчем бросается монетка:
+     — с вероятностью weakChance соперник собирается пониженным: целевая плотность
+       БК уходит на 10–15% НИЖЕ плотности игрока, а число легендарных карт режется
+       в той же пропорции (это и есть «слабее текущего»);
+     — иначе соперник прежний, ±8% по ГДД («текущий»).
+   Если пониженный состав при текущей колоде игрока собрать невозможно
+   (например, у игрока одни обычные карты и опускаться уже некуда),
+   подбор молча возвращается к обычному коридору ±8%. */
+const BOT_POWER={ weakChance:0.5, minCut:0.10, maxCut:0.15 };
+
 function buildBotOpponent(myUniq,myBkSize,handSize){
   const myBk=bkList();
   const locked=new Set(safeLocked());
@@ -3540,28 +3553,47 @@ function buildBotOpponent(myUniq,myBkSize,handSize){
   };
 
   const myD=density(myBk);
+  const myL=myBk.filter(c=>c.rar==='L').length;
   const targetBkSize=Math.max(3,Math.min(CFG.bkSize,myBkSize,available.length));
 
+  // Бросок на силу соперника в этом матче.
+  const weakRoll=Math.random()<BOT_POWER.weakChance;
+  const cut=BOT_POWER.minCut+Math.random()*(BOT_POWER.maxCut-BOT_POWER.minCut);
+
   // Перебираем ВСЕ возможные редкостные составы БК нужного размера.
-  // D зависит только от C/R/L, поэтому это даёт математическую гарантию ±8%.
-  const feasible=[];
-  for(let l=0;l<=Math.min(targetBkSize,byR.L.length);l++){
-    for(let r=0;r<=Math.min(targetBkSize-l,byR.R.length);r++){
-      const c=targetBkSize-l-r;
-      if(c<0 || c>byR.C.length) continue;
-      const d=(c+2*r+4*l)/targetBkSize;
-      const gapPct=myD>0?Math.abs(d-myD)/myD*100:0;
-      if(gapPct<=8.000001) feasible.push({C:c,R:r,L:l,d,gapPct});
+  // D зависит только от C/R/L, поэтому коридор выдерживается математически точно.
+  const buildFeasible=(lo,hi,maxL)=>{
+    const out=[];
+    for(let l=0;l<=Math.min(targetBkSize,byR.L.length,maxL);l++){
+      for(let r=0;r<=Math.min(targetBkSize-l,byR.R.length);r++){
+        const c=targetBkSize-l-r;
+        if(c<0 || c>byR.C.length) continue;
+        const d=(c+2*r+4*l)/targetBkSize;
+        if(d<myD*lo-1e-9 || d>myD*hi+1e-9) continue;
+        out.push({C:c,R:r,L:l,d,gapPct:myD>0?(d-myD)/myD*100:0});
+      }
     }
+    return out;
+  };
+
+  let feasible=[], targetD;
+  if(weakRoll){
+    // пониженный соперник: плотность на 10–15% ниже, легендарок пропорционально меньше
+    feasible=buildFeasible(1-BOT_POWER.maxCut, 1-BOT_POWER.minCut, Math.floor(myL*(1-cut)));
+    targetD=myD*(1-cut);
+  }
+  if(!feasible.length){
+    // обычный коридор ГДД ±8%
+    feasible=buildFeasible(0.92,1.08,Infinity);
+    targetD=myD*(0.92+Math.random()*0.16);
   }
 
   // Такой состав всегда существует как минимум в виде текущего состава игрока,
   // потому что бот использует тот же доступный пул и тот же размер БК.
   let comp;
   if(feasible.length){
-    // Не берём "самый близкий". Сначала задаём случайную целевую плотность внутри ±8%,
-    // затем выбираем ближайший к НЕЙ допустимый дискретный состав.
-    const targetD=myD*(0.92+Math.random()*0.16);
+    // Не берём "самый близкий" к игроку: сначала задана целевая плотность,
+    // затем выбирается ближайший к НЕЙ допустимый дискретный состав.
     const shuffled=shuffle(feasible.slice());
     comp=shuffled.reduce((best,x)=>
       !best || Math.abs(x.d-targetD)<Math.abs(best.d-targetD) ? x : best
@@ -3581,7 +3613,8 @@ function buildBotOpponent(myUniq,myBkSize,handSize){
   ];
 
   const botD=density(bkIds);
-  const gapPct=myD>0?Math.abs(botD-myD)/myD*100:0;
+  // знак сохраняем: минус означает, что соперник слабее игрока
+  const gapPct=myD>0?(botD-myD)/myD*100:0;
 
   // Дополнительный фильтр ГДД: ±15 уникальных карт коллекции.
   // Коллекция бота включает его БК плюс случайный остаток доступных карт.
